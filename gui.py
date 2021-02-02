@@ -31,13 +31,17 @@ while True:
     # Add a dictionary to the list
     if event == '_file_to_add_':
         file_path, file_name = os.path.split(values['_file_to_add_'])
-        current_file_names = window['-FILE NAMES-'].get_list_values()
-        current_file_paths = window['-FILE PATHS-'].get_list_values()
-        if file_name not in current_file_names:
-            current_file_names.append(file_name)
-            current_file_paths.append(file_path)
-            window['-FILE NAMES-'].update(disabled=False, values=current_file_names)
-            window['-FILE PATHS-'].update(disabled=False, values=current_file_paths)
+        # serve only newly populated items
+        if len(file_name) > 0:
+            current_file_names = window['-FILE NAMES-'].get_list_values()
+            current_file_paths = window['-FILE PATHS-'].get_list_values()
+            if file_name not in current_file_names:
+                current_file_names.append(file_name)
+                current_file_paths.append(file_path)
+                window['-FILE NAMES-'].update(disabled=False, values=current_file_names)
+                window['-FILE PATHS-'].update(disabled=False, values=current_file_paths)
+        # clear file path storage to properly handle CANCEL situation
+        window['_file_to_add_'].update(value="")
 
     # remove dictionary from the list
     if event == '-REMOVE FILE-':
