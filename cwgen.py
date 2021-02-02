@@ -6,7 +6,7 @@ dict_dir_name = "ispell-pl-20021127"
 def load(dictionary_path):
     loaded_dictionary = dict()
 
-    with open(os.path.normpath(dictionary_path), "r") as dictionary:
+    with open(os.path.normpath(dictionary_path), mode="r", encoding="ISO-8859-1") as dictionary:
         for line in dictionary:
             # populate dictionary (index -> word_len)
             split_data = line.strip().split(None, 1)
