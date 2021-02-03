@@ -17,6 +17,7 @@ FILES_LISTBOX_WIDTH = 40
 FILES_LISTBOX_HEIGHT = 10
 FILE_NAMES_KEY = '-FILE NAMES-'
 FILE_PATHS_KEY = '-FILE PATHS-'
+FILE_STATS_KEY = '-FILE STATS-'
 
 # sliders config
 H_SLIDER_WIDTH = 28
@@ -28,17 +29,23 @@ def handle_dictionary_add(window, values):
         # on file selection cancel values[FILE_PATH_INPUT_KEY] is empty
         if len(values[FILE_PATH_INPUT_KEY]) > 0:
             file_path = os.path.normpath(values[FILE_PATH_INPUT_KEY])
-            file_name = os.path.basename(file_path)
-            current_file_names = window[FILE_NAMES_KEY].get_list_values()
-            current_file_paths = window[FILE_PATHS_KEY].get_list_values()
-            if file_name not in current_file_names:
-                # get file statistics to asses if it may be used
-                file_stat = cwgen.get_stat(file_path)
-                if file_stat[0] > 0:
-                    current_file_names.append(file_name)
-                    current_file_paths.append(file_path)
-                    window[FILE_NAMES_KEY].update(disabled=False, values=current_file_names)
-                    window[FILE_PATHS_KEY].update(disabled=False, values=current_file_paths)
+            if os.path.isfile(file_path):
+                file_path = os.path.normpath(values[FILE_PATH_INPUT_KEY])
+                file_name = os.path.basename(file_path)
+                current_file_names = window[FILE_NAMES_KEY].get_list_values()
+                current_file_paths = window[FILE_PATHS_KEY].get_list_values()
+                current_file_stats = window[FILE_STATS_KEY].get_list_values()
+                # file name should be distinct
+                if file_name not in current_file_names:
+                    # get file statistics to asses if it may be used
+                    file_stat = cwgen.get_stat(file_path)
+                    if file_stat[0] > 0:
+                        current_file_names.append(file_name)
+                        current_file_paths.append(file_path)
+                        current_file_stats.append(file_stat)
+                        window[FILE_NAMES_KEY].update(values=current_file_names)
+                        window[FILE_PATHS_KEY].update(values=current_file_paths)
+                        window[FILE_STATS_KEY].update(values=current_file_stats)
         # clear file path storage to properly handle CANCEL situation
         window[FILE_PATH_INPUT_KEY].update(value="")
 
@@ -47,14 +54,18 @@ def handle_dictionary_delete(window, values):
         if len(selected_files_indexes) > 0:
             updated_file_names = []
             updated_file_paths = []
+            updated_file_stats = []
             current_file_names = window[FILE_NAMES_KEY].get_list_values()
             current_file_paths = window[FILE_PATHS_KEY].get_list_values()
-            for index, file_name in enumerate(current_file_names):
-                if index not in selected_files_indexes:
-                    updated_file_names.append(current_file_names[index]) 
-                    updated_file_paths.append(current_file_paths[index]) 
-            window[FILE_NAMES_KEY].update(disabled=False, values=updated_file_names)
-            window[FILE_PATHS_KEY].update(disabled=False, values=updated_file_paths)
+            current_file_stats = window[FILE_STATS_KEY].get_list_values()
+            for file_index, file_name in enumerate(current_file_names):
+                if file_index not in selected_files_indexes:
+                    updated_file_names.append(current_file_names[file_index])
+                    updated_file_paths.append(current_file_paths[file_index])
+                    updated_file_stats.append(current_file_stats[file_index])
+            window[FILE_NAMES_KEY].update(values=updated_file_names)
+            window[FILE_PATHS_KEY].update(values=updated_file_paths)
+            window[FILE_STATS_KEY].update(values=updated_file_stats)
 
 def handle_words_length_sliders(event, values):
     min_val = values[LETTERS_MIN_KEY]
@@ -66,6 +77,7 @@ def handle_words_length_sliders(event, values):
     if event == LETTERS_MAX_KEY:
         if max_val < min_val:
             window[LETTERS_MIN_KEY].update(value=max_val)
+
 # window theme
 sg.theme('Default1')
 
@@ -74,7 +86,9 @@ files_operation = [sg.Input(enable_events=True, visible=False, key=FILE_PATH_INP
                        sg.FileBrowse(button_text="Add new", file_types=(("ALL Files", "*.*"),("CWOPS sessions", "*.cwo")), target=FILE_PATH_INPUT_KEY, key=FILE_BROWSE_KEY),
                        sg.Button(button_text="Remove selected", key=FILE_REMOVE_KEY)]
 
-files_data = [sg.Listbox(values=[], select_mode="LISTBOX_SELECT_MODE_MULTIPLE", disabled=True , size=(FILES_LISTBOX_WIDTH, FILES_LISTBOX_HEIGHT), key=(FILE_NAMES_KEY)), sg.Listbox(values=[], visible=False, key='-FILE PATHS-')]
+files_data = [sg.Listbox(values=[], select_mode="LISTBOX_SELECT_MODE_SINGLE", size=(FILES_LISTBOX_WIDTH, FILES_LISTBOX_HEIGHT), key=(FILE_NAMES_KEY)),
+              sg.Listbox(values=[], visible=False, key='-FILE PATHS-'),
+              sg.Listbox(values=[], visible=False, key='-FILE STATS-')]
 
 letters_min = [sg.Text("MIN", size=(4, 1)), sg.Slider(size=(H_SLIDER_WIDTH, H_SLIDER_HEIGHT), orientation='h', enable_events=True, key=LETTERS_MIN_KEY)]
 
