@@ -15,6 +15,12 @@ FILES_LISTBOX_HEIGHT = 10
 FILE_NAMES_KEY = '-FILE NAMES-'
 FILE_PATHS_KEY = '-FILE PATHS-'
 
+# sliders config
+H_SLIDER_WIDTH = 28
+H_SLIDER_HEIGHT = 10
+LETTERS_MIN_KEY = '-LETTERS MIN-'
+LETTERS_MAX_KEY = '-LETTERS MAX-'
+
 sg.theme('Default1')
 
 files_operation = [sg.Input(enable_events=True, visible=False, key=FILE_PATH_INPUT_KEY),
@@ -23,8 +29,13 @@ files_operation = [sg.Input(enable_events=True, visible=False, key=FILE_PATH_INP
 
 files_data = [sg.Listbox(values=[], select_mode="LISTBOX_SELECT_MODE_MULTIPLE", disabled=True , size=(FILES_LISTBOX_WIDTH, FILES_LISTBOX_HEIGHT), key=(FILE_NAMES_KEY)), sg.Listbox(values=[], visible=False, key='-FILE PATHS-')]
 
+letters_min = [sg.Text("MIN", size=(4, 1)), sg.Slider(size=(H_SLIDER_WIDTH, H_SLIDER_HEIGHT), orientation='h', key=LETTERS_MIN_KEY)]
+
+letters_max = [sg.Text("MAX", size=(4, 1)), sg.Slider(size=(H_SLIDER_WIDTH, H_SLIDER_HEIGHT), orientation='h', key=LETTERS_MAX_KEY)]
+
 # Left column - input data
-left_col = [[sg.Frame('Dictionaries', [files_operation, files_data])]]
+left_col = [[sg.Frame('Dictionaries', [files_operation, files_data])],
+            [sg.Frame('Words letters count', [letters_min, letters_max])]]
 
 # Right column - config based on data
 right_col = [[sg.T('TEST')]]
@@ -70,6 +81,10 @@ while True:
                     updated_file_paths.append(current_file_paths[index]) 
             window[FILE_NAMES_KEY].update(disabled=False, values=updated_file_names)
             window[FILE_PATHS_KEY].update(disabled=False, values=current_file_paths)
+
+    # handle words min length
+
+    # handle words max length
 
 # Finish up by removing from the screen
 window.close()
