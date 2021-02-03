@@ -10,7 +10,7 @@ FILE_BROWSE_KEY = '-ADD FILE-'
 FILE_REMOVE_KEY = '-REMOVE FILE-'
 
 # input config
-FILE_PATH_INPUT_KEY = '_file_to_add_'
+FILE_PATH_INPUT_KEY = '-FILE PATH-'
 
 # listbox config
 FILES_LISTBOX_WIDTH = 40
