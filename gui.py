@@ -32,10 +32,13 @@ def handle_dictionary_add(window, values):
             current_file_names = window[FILE_NAMES_KEY].get_list_values()
             current_file_paths = window[FILE_PATHS_KEY].get_list_values()
             if file_name not in current_file_names:
-                current_file_names.append(file_name)
-                current_file_paths.append(file_path)
-                window[FILE_NAMES_KEY].update(disabled=False, values=current_file_names)
-                window[FILE_PATHS_KEY].update(disabled=False, values=current_file_paths)
+                # get file statistics to asses if it may be used
+                file_stat = cwgen.get_stat(file_path)
+                if file_stat[0] > 0:
+                    current_file_names.append(file_name)
+                    current_file_paths.append(file_path)
+                    window[FILE_NAMES_KEY].update(disabled=False, values=current_file_names)
+                    window[FILE_PATHS_KEY].update(disabled=False, values=current_file_paths)
         # clear file path storage to properly handle CANCEL situation
         window[FILE_PATH_INPUT_KEY].update(value="")
 
