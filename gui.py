@@ -2,6 +2,9 @@ import PySimpleGUI as sg
 import cwgen
 import os
 
+# window config
+WINDOW_DESCRIPTION = 'CW training files generator by SP6HFE'
+
 # button config
 FILE_BROWSE_KEY = '-ADD FILE-'
 FILE_REMOVE_KEY = '-REMOVE FILE-'
@@ -22,9 +25,10 @@ LETTERS_MIN_KEY = '-LETTERS MIN-'
 LETTERS_MAX_KEY = '-LETTERS MAX-'
 
 def handle_dictionary_add(window, values):
-        file_path, file_name = os.path.split(values[FILE_PATH_INPUT_KEY])
         # on file selection cancel values[FILE_PATH_INPUT_KEY] is empty
-        if len(file_name) > 0:
+        if len(values[FILE_PATH_INPUT_KEY]) > 0:
+            file_path = os.path.normpath(values[FILE_PATH_INPUT_KEY])
+            file_name = os.path.basename(file_path)
             current_file_names = window[FILE_NAMES_KEY].get_list_values()
             current_file_paths = window[FILE_PATHS_KEY].get_list_values()
             if file_name not in current_file_names:
@@ -82,7 +86,7 @@ right_col = [[sg.T('TEST')]]
 layout = [[sg.Column(left_col), sg.VSeparator(), sg.Column(right_col)]]
 
 # Create the window
-window = sg.Window('CW training files generator by SP6HFE', layout)
+window = sg.Window(WINDOW_DESCRIPTION, layout)
 
 # Display and interact with the Window using an Event Loop
 while True:
