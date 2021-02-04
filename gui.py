@@ -24,6 +24,10 @@ H_SLIDER_WIDTH = 28
 H_SLIDER_HEIGHT = 10
 LETTERS_MIN_KEY = '-LETTERS MIN-'
 LETTERS_MAX_KEY = '-LETTERS MAX-'
+LETTERS_MIN_RANGE_START_KEY = '-LETTERS MIN RANGE START-'
+LETTERS_MIN_RANGE_STOP_KEY = '-LETTERS MIN RANGE STOP-'
+LETTERS_MAX_RANGE_START_KEY = '-LETTERS MAX RANGE START-'
+LETTERS_MAX_RANGE_STOP_KEY = '-LETTERS MAX RANGE STOP-'
 
 def handle_dictionary_add(window, values):
         # on file selection cancel values[FILE_PATH_INPUT_KEY] is empty
@@ -81,14 +85,16 @@ def handle_words_length_sliders(event, values):
             window[LETTERS_MIN_KEY].update(value=slider_max_val)
 
 def calculate_words_length_range(words_stat):
-    letters_min_count = 1000
+    letters_min_count = 0
     letters_max_count = 0
 
-    for words_count, letters_min, letters_max, stat in words_stat:
-        if letters_min_count > letters_min:
-            letters_min_count = letters_min
-        if letters_max_count < letters_max:
-            letters_max_count = letters_max
+    if len(words_stat) > 0:
+        letters_min_count = 1000
+        for words_count, letters_min, letters_max, stat in words_stat:
+            if letters_min_count > letters_min:
+                letters_min_count = letters_min
+            if letters_max_count < letters_max:
+                letters_max_count = letters_max
 
     return (letters_min_count, letters_max_count)
 
@@ -116,6 +122,10 @@ def update_words_length_sliders_config(window, values, new_range):
     
     window[LETTERS_MIN_KEY].update(range=new_range, value=new_min_val)
     window[LETTERS_MAX_KEY].update(range=new_range, value=new_max_val)
+    window[LETTERS_MIN_RANGE_START_KEY].update(value=new_range_min)
+    window[LETTERS_MIN_RANGE_STOP_KEY].update(value=new_range_max)
+    window[LETTERS_MAX_RANGE_START_KEY].update(value=new_range_min)
+    window[LETTERS_MAX_RANGE_STOP_KEY].update(value=new_range_max)
 
 # window theme
 sg.theme('Default1')
@@ -129,9 +139,15 @@ files_data = [sg.Listbox(values=[], select_mode="LISTBOX_SELECT_MODE_SINGLE", si
               sg.Listbox(values=[], visible=False, key='-FILE PATHS-'),
               sg.Listbox(values=[], visible=False, key='-FILE STATS-')]
 
-letters_min = [sg.Text("MIN", size=(4, 1)), sg.Slider(range=(0, 0), size=(H_SLIDER_WIDTH, H_SLIDER_HEIGHT), orientation='h', enable_events=True, key=LETTERS_MIN_KEY)]
+letters_min = [sg.Text("MIN:", size=(4, 1)),
+               sg.Text("0", size=(2,1), key=LETTERS_MIN_RANGE_START_KEY),
+               sg.Slider(range=(0, 0), size=(H_SLIDER_WIDTH, H_SLIDER_HEIGHT), orientation='h', enable_events=True, key=LETTERS_MIN_KEY),
+               sg.Text("0", size=(2,1), key=LETTERS_MIN_RANGE_STOP_KEY)]
 
-letters_max = [sg.Text("MAX", size=(4, 1)), sg.Slider(range=(0, 0), size=(H_SLIDER_WIDTH, H_SLIDER_HEIGHT), orientation='h', enable_events=True, key=LETTERS_MAX_KEY)]
+letters_max = [sg.Text("MAX:", size=(4, 1)),
+               sg.Text("0", size=(2,1), key=LETTERS_MAX_RANGE_START_KEY),
+               sg.Slider(range=(0, 0), size=(H_SLIDER_WIDTH, H_SLIDER_HEIGHT), orientation='h', enable_events=True, key=LETTERS_MAX_KEY),
+               sg.Text("0", size=(2,1), key=LETTERS_MAX_RANGE_STOP_KEY)]
 
 left_col = [[sg.Frame('Dictionaries', [files_operation, files_data])],
             [sg.Frame('Words letters count', [letters_min, letters_max])]]
