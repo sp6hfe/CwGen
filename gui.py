@@ -16,13 +16,6 @@ class UserInterface:
     # GUI - table config
     FILES_DATA_TABLE_KEY = '-FILES DATA-'
 
-    # GUI - listbox config
-    FILES_LISTBOX_WIDTH = 40
-    FILES_LISTBOX_HEIGHT = 10
-    FILE_NAMES_KEY = '-FILE NAMES-'
-    FILE_PATHS_KEY = '-FILE PATHS-'
-    FILE_STATS_KEY = '-FILE STATS-'
-
     # GUI - sliders config
     H_SLIDER_WIDTH = 21
     H_SLIDER_HEIGHT = 10
@@ -41,10 +34,6 @@ class UserInterface:
         files_operation = [sg.Input(enable_events=True, visible=False, key=self.FILE_PATH_INPUT_KEY),
                         sg.FileBrowse(button_text="Add", file_types=(("ALL Files", "*.*"),("CWOPS sessions", "*.cwo")), target=self.FILE_PATH_INPUT_KEY, key=self.FILE_BROWSE_KEY),
                         sg.Button(button_text="Remove selected", key=self.FILE_REMOVE_KEY)]
-
-        files_data = [sg.Listbox(values=[], select_mode="LISTBOX_SELECT_MODE_SINGLE", size=(self.FILES_LISTBOX_WIDTH, self.FILES_LISTBOX_HEIGHT), key=(self.FILE_NAMES_KEY)),
-                    sg.Listbox(values=[], visible=False, key='-FILE PATHS-'),
-                    sg.Listbox(values=[], visible=False, key='-FILE STATS-')]
 
         # GUI - header columns -> name, column size, visible?
         files_data_header = [
@@ -77,7 +66,7 @@ class UserInterface:
                     sg.Slider(range=(0, 0), size=(self.H_SLIDER_WIDTH, self.H_SLIDER_HEIGHT), orientation='h', enable_events=True, key=self.LETTERS_MAX_KEY),
                     sg.Text("0", size=(2,1), key=self.LETTERS_MAX_RANGE_STOP_KEY)]
 
-        left_col = [[sg.Frame('Dictionaries', [files_operation, files_data_table, files_data])],
+        left_col = [[sg.Frame('Dictionaries', [files_operation, files_data_table])],
                     [sg.Frame('Words letters count range', [letters_min, letters_max])]]
 
         right_col = []
@@ -94,56 +83,31 @@ class UserInterface:
             if len(values[self.FILE_PATH_INPUT_KEY]) > 0:
                 file_path = os.path.normpath(values[self.FILE_PATH_INPUT_KEY])
                 if os.path.isfile(file_path):
-                    file_path = os.path.normpath(values[self.FILE_PATH_INPUT_KEY])
                     file_name = os.path.basename(file_path)
-                    current_file_names = self.window[self.FILE_NAMES_KEY].get_list_values()
-                    current_file_paths = self.window[self.FILE_PATHS_KEY].get_list_values()
-                    current_file_stats = self.window[self.FILE_STATS_KEY].get_list_values()
                     current_files_data = self.window[self.FILES_DATA_TABLE_KEY].get()
-                    print(current_files_data)
                     # file name should be distinct
-                    if file_name not in current_file_names:
-                        # get file statistics to asses if it may be used
+                    if file_name not in [row[0] for row in current_files_data]:
                         file_stat = cwgen.get_stat(file_path)
+                        # add file when parsed properly
                         if file_stat[0] > 0:
-                            current_file_names.append(file_name)
-                            current_file_paths.append(file_path)
-                            current_file_stats.append(file_stat)
                             current_files_data.append([file_name, file_path, file_stat[0], file_stat[1], file_stat[2], file_stat[3]])
-                            self.window[self.FILE_NAMES_KEY].update(values=current_file_names)
-                            self.window[self.FILE_PATHS_KEY].update(values=current_file_paths)
-                            self.window[self.FILE_STATS_KEY].update(values=current_file_stats)
                             self.window[self.FILES_DATA_TABLE_KEY].update(values=current_files_data)
-                            self.update_words_length_sliders_config(values, self.calculate_words_length_range(current_file_stats))
+                            self.update_words_length_sliders_config(values, self.calculate_words_length_range())
             # clear file path storage to properly handle CANCEL situation
             self.window[self.FILE_PATH_INPUT_KEY].update(value="")
 
     def handle_dictionary_delete(self, values):
-            # selected_files_indexes = window[FILE_NAMES_KEY].get_indexes()
-            # if len(selected_files_indexes) > 0:
+            # self.files_table_idx == -1 when no dictionary in the table is selected
             if self.files_table_idx >= 0:
-                updated_file_names = []
-                updated_file_paths = []
-                updated_file_stats = []
                 updated_files_data = []
-                current_file_names = self.window[self.FILE_NAMES_KEY].get_list_values()
-                current_file_paths = self.window[self.FILE_PATHS_KEY].get_list_values()
-                current_file_stats = self.window[self.FILE_STATS_KEY].get_list_values()
                 current_files_data = self.window[self.FILES_DATA_TABLE_KEY].get()
-                # for file_index, _file_name in enumerate(current_file_names):
+                # locate and remove data related to selected record in the files table
                 for idx, _files_data in enumerate(current_files_data):
-                    # if file_index not in selected_files_indexes:
                     if idx is not self.files_table_idx:
-                        updated_file_names.append(current_file_names[idx])
-                        updated_file_paths.append(current_file_paths[idx])
-                        updated_file_stats.append(current_file_stats[idx])
                         updated_files_data.append(current_files_data[idx])
-                self.window[self.FILE_NAMES_KEY].update(values=updated_file_names)
-                self.window[self.FILE_PATHS_KEY].update(values=updated_file_paths)
-                self.window[self.FILE_STATS_KEY].update(values=updated_file_stats)
                 self.window[self.FILES_DATA_TABLE_KEY].update(values=updated_files_data)
-                self.update_words_length_sliders_config(values, self.calculate_words_length_range(updated_file_stats))
-                # set table index to negatove to properly handle dictionary remove button click
+                self.update_words_length_sliders_config(values, self.calculate_words_length_range())
+                # set table index to negative to properly handle dictionary remove button click
                 self.files_table_idx = -1
 
     def handle_words_length_sliders(self, event, values):
@@ -157,13 +121,14 @@ class UserInterface:
             if slider_max_val < slider_min_val:
                 self.window[self.LETTERS_MIN_KEY].update(value=slider_max_val)
 
-    def calculate_words_length_range(self, words_stat):
+    def calculate_words_length_range(self):
         letters_min_count = 0
         letters_max_count = 0
+        current_files_data = self.window[self.FILES_DATA_TABLE_KEY].get()
 
-        if len(words_stat) > 0:
+        if len(current_files_data) > 0:
             letters_min_count = 1000
-            for _words_count, letters_min, letters_max, _stat in words_stat:
+            for _name, _path, _length, letters_min, letters_max, _stat in current_files_data:
                 if letters_min_count > letters_min:
                     letters_min_count = letters_min
                 if letters_max_count < letters_max:
