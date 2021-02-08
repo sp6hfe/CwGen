@@ -1,6 +1,15 @@
-import PySimpleGUI as sg
 import cwgen
 import os
+import sys
+import subprocess
+
+try:
+    import PySimpleGUI as sg
+except ImportError:
+    subprocess.check_call(
+        [sys.executable, "-m", "pip", "install", 'PySimpleGUI'])
+finally:
+    import PySimpleGUI as sg
 
 
 class CwGenUI:
