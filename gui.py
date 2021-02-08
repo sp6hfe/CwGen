@@ -2,7 +2,8 @@ import PySimpleGUI as sg
 import cwgen
 import os
 
-class UserInterface:
+
+class CwGenUI:
     # GUI - window config
     WINDOW_DESCRIPTION = 'CW training files generator by SP6HFE'
 
@@ -32,8 +33,9 @@ class UserInterface:
 
         # GUI - create building blocks
         files_operation = [sg.Input(enable_events=True, visible=False, key=self.FILE_PATH_INPUT_KEY),
-                        sg.FileBrowse(button_text="Add", file_types=(("ALL Files", "*.*"),("CWOPS sessions", "*.cwo")), target=self.FILE_PATH_INPUT_KEY, key=self.FILE_BROWSE_KEY),
-                        sg.Button(button_text="Remove selected", key=self.FILE_REMOVE_KEY)]
+                           sg.FileBrowse(button_text="Add", file_types=(
+                               ("ALL Files", "*.*"), ("CWOPS sessions", "*.cwo")), target=self.FILE_PATH_INPUT_KEY, key=self.FILE_BROWSE_KEY),
+                           sg.Button(button_text="Remove selected", key=self.FILE_REMOVE_KEY)]
 
         # GUI - header columns -> name, column size, visible?
         files_data_header = [
@@ -46,25 +48,32 @@ class UserInterface:
         ]
 
         files_data_table = [sg.Table(values=[],
-                                    headings=[name for name, _size, _visible in files_data_header],
-                                    col_widths=[size for _name, size, _visible in files_data_header],
-                                    visible_column_map=[visible for _name, _size, visible in files_data_header],
-                                    num_rows=10,
-                                    justification='left',
-                                    auto_size_columns=False,
-                                    enable_events=True,
-                                    key=self.FILES_DATA_TABLE_KEY
-                                    )]
+                                     headings=[name for name, _size,
+                                               _visible in files_data_header],
+                                     col_widths=[size for _name, size,
+                                                 _visible in files_data_header],
+                                     visible_column_map=[
+                                         visible for _name, _size, visible in files_data_header],
+                                     num_rows=10,
+                                     justification='left',
+                                     auto_size_columns=False,
+                                     enable_events=True,
+                                     key=self.FILES_DATA_TABLE_KEY
+                                     )]
 
         letters_min = [sg.Text("MIN:", size=(4, 1)),
-                    sg.Text("0", size=(2,1), key=self.LETTERS_MIN_RANGE_START_KEY),
-                    sg.Slider(range=(0, 0), size=(self.H_SLIDER_WIDTH, self.H_SLIDER_HEIGHT), orientation='h', enable_events=True, key=self.LETTERS_MIN_KEY),
-                    sg.Text("0", size=(2,1), key=self.LETTERS_MIN_RANGE_STOP_KEY)]
+                       sg.Text("0", size=(2, 1),
+                               key=self.LETTERS_MIN_RANGE_START_KEY),
+                       sg.Slider(range=(0, 0), size=(self.H_SLIDER_WIDTH, self.H_SLIDER_HEIGHT),
+                                 orientation='h', enable_events=True, key=self.LETTERS_MIN_KEY),
+                       sg.Text("0", size=(2, 1), key=self.LETTERS_MIN_RANGE_STOP_KEY)]
 
         letters_max = [sg.Text("MAX:", size=(4, 1)),
-                    sg.Text("0", size=(2,1), key=self.LETTERS_MAX_RANGE_START_KEY),
-                    sg.Slider(range=(0, 0), size=(self.H_SLIDER_WIDTH, self.H_SLIDER_HEIGHT), orientation='h', enable_events=True, key=self.LETTERS_MAX_KEY),
-                    sg.Text("0", size=(2,1), key=self.LETTERS_MAX_RANGE_STOP_KEY)]
+                       sg.Text("0", size=(2, 1),
+                               key=self.LETTERS_MAX_RANGE_START_KEY),
+                       sg.Slider(range=(0, 0), size=(self.H_SLIDER_WIDTH, self.H_SLIDER_HEIGHT),
+                                 orientation='h', enable_events=True, key=self.LETTERS_MAX_KEY),
+                       sg.Text("0", size=(2, 1), key=self.LETTERS_MAX_RANGE_STOP_KEY)]
 
         left_col = [[sg.Frame('Dictionaries', [files_operation, files_data_table])],
                     [sg.Frame('Words letters count range', [letters_min, letters_max])]]
@@ -78,36 +87,42 @@ class UserInterface:
         self.window = sg.Window(self.WINDOW_DESCRIPTION, layout)
 
     def handle_dictionary_add(self, values):
-            # on file selection cancel values[FILE_PATH_INPUT_KEY] is empty
-            if len(values[self.FILE_PATH_INPUT_KEY]) > 0:
-                file_path = os.path.normpath(values[self.FILE_PATH_INPUT_KEY])
-                if os.path.isfile(file_path):
-                    file_name = os.path.basename(file_path)
-                    current_files_data = self.window[self.FILES_DATA_TABLE_KEY].get()
-                    # file name should be distinct
-                    if file_name not in [row[0] for row in current_files_data]:
-                        file_stat = cwgen.get_stat(file_path)
-                        # add file when parsed properly
-                        if file_stat[0] > 0:
-                            current_files_data.append([file_name, file_path, file_stat[0], file_stat[1], file_stat[2], file_stat[3]])
-                            self.window[self.FILES_DATA_TABLE_KEY].update(values=current_files_data)
-                            self.update_words_length_sliders_config(values, self.calculate_words_length_range())
-            # clear file path storage to properly handle CANCEL situation
-            self.window[self.FILE_PATH_INPUT_KEY].update(value="")
+        # on file selection cancel values[FILE_PATH_INPUT_KEY] is empty
+        if len(values[self.FILE_PATH_INPUT_KEY]) > 0:
+            file_path = os.path.normpath(values[self.FILE_PATH_INPUT_KEY])
+            if os.path.isfile(file_path):
+                file_name = os.path.basename(file_path)
+                current_files_data = self.window[self.FILES_DATA_TABLE_KEY].get(
+                )
+                # file name should be distinct
+                if file_name not in [row[0] for row in current_files_data]:
+                    file_stat = cwgen.get_stat(file_path)
+                    # add file when parsed properly
+                    if file_stat[0] > 0:
+                        current_files_data.append(
+                            [file_name, file_path, file_stat[0], file_stat[1], file_stat[2], file_stat[3]])
+                        self.window[self.FILES_DATA_TABLE_KEY].update(
+                            values=current_files_data)
+                        self.update_words_length_sliders_config(
+                            values, self.calculate_words_length_range())
+        # clear file path storage to properly handle CANCEL situation
+        self.window[self.FILE_PATH_INPUT_KEY].update(value="")
 
     def handle_dictionary_delete(self, values):
-            # self.files_table_idx == -1 when no dictionary in the table is selected
-            if self.files_table_idx >= 0:
-                updated_files_data = []
-                current_files_data = self.window[self.FILES_DATA_TABLE_KEY].get()
-                # locate and remove data related to selected record in the files table
-                for idx, _files_data in enumerate(current_files_data):
-                    if idx is not self.files_table_idx:
-                        updated_files_data.append(current_files_data[idx])
-                self.window[self.FILES_DATA_TABLE_KEY].update(values=updated_files_data)
-                self.update_words_length_sliders_config(values, self.calculate_words_length_range())
-                # set table index to negative to properly handle dictionary remove button click
-                self.files_table_idx = -1
+        # self.files_table_idx == -1 when no dictionary in the table is selected
+        if self.files_table_idx >= 0:
+            updated_files_data = []
+            current_files_data = self.window[self.FILES_DATA_TABLE_KEY].get()
+            # locate and remove data related to selected record in the files table
+            for idx, _files_data in enumerate(current_files_data):
+                if idx is not self.files_table_idx:
+                    updated_files_data.append(current_files_data[idx])
+            self.window[self.FILES_DATA_TABLE_KEY].update(
+                values=updated_files_data)
+            self.update_words_length_sliders_config(
+                values, self.calculate_words_length_range())
+            # set table index to negative to properly handle dictionary remove button click
+            self.files_table_idx = -1
 
     def handle_words_length_sliders(self, event, values):
         slider_min_val = values[self.LETTERS_MIN_KEY]
@@ -156,13 +171,19 @@ class UserInterface:
                 new_max_val = new_range_max
             if new_max_val < current_min_val:
                 new_min_val = new_max_val
-        
-        self.window[self.LETTERS_MIN_KEY].update(range=new_range, value=new_min_val)
-        self.window[self.LETTERS_MAX_KEY].update(range=new_range, value=new_max_val)
-        self.window[self.LETTERS_MIN_RANGE_START_KEY].update(value=new_range_min)
-        self.window[self.LETTERS_MIN_RANGE_STOP_KEY].update(value=new_range_max)
-        self.window[self.LETTERS_MAX_RANGE_START_KEY].update(value=new_range_min)
-        self.window[self.LETTERS_MAX_RANGE_STOP_KEY].update(value=new_range_max)
+
+        self.window[self.LETTERS_MIN_KEY].update(
+            range=new_range, value=new_min_val)
+        self.window[self.LETTERS_MAX_KEY].update(
+            range=new_range, value=new_max_val)
+        self.window[self.LETTERS_MIN_RANGE_START_KEY].update(
+            value=new_range_min)
+        self.window[self.LETTERS_MIN_RANGE_STOP_KEY].update(
+            value=new_range_max)
+        self.window[self.LETTERS_MAX_RANGE_START_KEY].update(
+            value=new_range_min)
+        self.window[self.LETTERS_MAX_RANGE_STOP_KEY].update(
+            value=new_range_max)
 
     def handleGui(self):
         event, values = self.window.read()
@@ -184,19 +205,21 @@ class UserInterface:
             self.handle_dictionary_delete(values)
 
         # handle words length change
-        if (event == self.LETTERS_MIN_KEY) or (event == self.LETTERS_MAX_KEY) :
+        if (event == self.LETTERS_MIN_KEY) or (event == self.LETTERS_MAX_KEY):
             self.handle_words_length_sliders(event, values)
 
         return True
+
 
 # UI theming
 sg.theme('Default1')
 
 # Start the GUI
-ui = UserInterface()
+ui = CwGenUI()
 
 # Display and interact with the GUI using an Event Loop
-while ui.handleGui(): pass
+while ui.handleGui():
+    pass
 
 # Game over
 del ui
