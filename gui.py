@@ -75,7 +75,6 @@ class UserInterface:
         layout = [[sg.Column(left_col), sg.VSeparator(), sg.Column(right_col)]]
 
         # Configure and create the window
-        sg.theme('Default1')
         self.window = sg.Window(self.WINDOW_DESCRIPTION, layout)
 
     def handle_dictionary_add(self, values):
@@ -190,8 +189,14 @@ class UserInterface:
 
         return True
 
+# UI theming
+sg.theme('Default1')
+
 # Start the GUI
 ui = UserInterface()
 
 # Display and interact with the GUI using an Event Loop
 while ui.handleGui(): pass
+
+# Game over
+del ui
