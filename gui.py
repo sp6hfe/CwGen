@@ -28,8 +28,9 @@ class CwGenUI:
     LETTERS_MAX_RANGE_STOP_KEY = '-LETTERS MAX RANGE STOP-'
 
     def __init__(self):
-        # State variables
+        # Members
         self.files_table_idx = -1
+        self.cw_gen = cwgen.CwGen()
 
         # GUI - create building blocks
         files_operation = [sg.Input(enable_events=True, visible=False, key=self.FILE_PATH_INPUT_KEY),
@@ -96,7 +97,7 @@ class CwGenUI:
                 )
                 # file name should be distinct
                 if file_name not in [row[0] for row in current_files_data]:
-                    file_stat = cwgen.get_stat(file_path)
+                    file_stat = self.cw_gen.get_dictionary_stat(file_path)
                     # add file when parsed properly
                     if file_stat[0] > 0:
                         current_files_data.append(
