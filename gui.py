@@ -1,15 +1,44 @@
-import cwgen
+from importlib import import_module
 import os
-import sys
 import subprocess
+import sys
 
-try:
-    import PySimpleGUI as sg
-except ImportError:
-    subprocess.check_call(
-        [sys.executable, "-m", "pip", "install", 'PySimpleGUI'])
-finally:
-    import PySimpleGUI as sg
+import cwgen
+
+# List of external dependencies to be installed using PIP with their short form
+external_imports = [('PySimpleGUI', 'sg')]
+
+# Handle missing imports installation
+for (name, short) in external_imports:
+    module_loaded = False
+
+    # Try to load or install if missing
+    try:
+        lib = import_module(name)
+    except:
+        print("\n\rMissing dependency: " + str(name) +
+              ". Trying to install using PIP...")
+        try:
+            subprocess.check_call(
+                [sys.executable, "-m", "pip", "install", name])
+        except:
+            sys.exit(
+                "Failed to install dependency: " + str(name) + ".\n\rIt's not reachable or PIP is not available.")
+        else:
+            print("\n\rDependency: " + str(name) + " installed.")
+    else:
+        globals()[short] = lib
+        module_loaded = True
+
+    # When just installed try to load
+    if not module_loaded:
+        try:
+            lib = import_module(name)
+        except:
+            sys.exit(
+                "Failed to install dependency: " + str(name) + ".\n\rIt's not reachable or PIP is not available.")
+        else:
+            globals()[short] = lib
 
 
 class CwGenUI:
