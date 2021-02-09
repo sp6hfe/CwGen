@@ -1,44 +1,26 @@
-from importlib import import_module
+import cwgen
 import os
 import subprocess
 import sys
 
-import cwgen
-
-# List of external dependencies to be installed using PIP with their short form
-external_imports = [('PySimpleGUI', 'sg')]
-
-# Handle missing imports installation
-for (name, short) in external_imports:
-    module_loaded = False
-
-    # Try to load or install if missing
+# PySimpleGUI to be installed using PIP if not available
+gui_lib_loaded = True
+try:
+    import PySimpleGUI as sg
+except ImportError:
+    gui_lib_loaded = False
+    print("Missing dependency: PySimpleGUI. Trying to install using PIP...")
     try:
-        lib = import_module(name)
+        subprocess.check_call(
+            [sys.executable, "-m", "pip", "install", "PySimpleGUI"])
     except:
-        print("\n\rMissing dependency: " + str(name) +
-              ". Trying to install using PIP...")
-        try:
-            subprocess.check_call(
-                [sys.executable, "-m", "pip", "install", name])
-        except:
-            sys.exit(
-                "Failed to install dependency: " + str(name) + ".\n\rIt's not reachable or PIP is not available.")
-        else:
-            print("\n\rDependency: " + str(name) + " installed.")
+        sys.exit(
+            "Failed to install dependency: PySimpleGUI.\n\rIt's not reachable or PIP is not available.")
     else:
-        globals()[short] = lib
-        module_loaded = True
+        print("Dependency: PySimpleGUI installed.")
 
-    # When just installed try to load
-    if not module_loaded:
-        try:
-            lib = import_module(name)
-        except:
-            sys.exit(
-                "Failed to install dependency: " + str(name) + ".\n\rIt's not reachable or PIP is not available.")
-        else:
-            globals()[short] = lib
+if not gui_lib_loaded:
+    import PySimpleGUI as sg
 
 
 class CwGenUI:
