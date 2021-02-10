@@ -1,3 +1,4 @@
+import hashlib
 import os
 import platform
 import sys
@@ -7,6 +8,48 @@ dict_dir_name = "ispell-pl-20021127"
 
 
 class CwGen:
+    def _md5(self, file_path):
+        hash_md5 = hashlib.md5()
+        with open(file_path, "rb") as f:
+            for data_chunk in iter(lambda: f.read(4096), b""):
+                hash_md5.update(data_chunk)
+
+        return hash_md5.hexdigest()
+
+    def _get_file_from_web(self, file_url, file_path):
+        TEMP_FILE_SUFFIX = '_tmp'
+
+        # make sure directories are there
+        file_directory = os.path.dirname(file_path)
+        if not os.path.exists(file_directory):
+            os.makedirs(file_directory)
+
+        # download the file with temporary suffix
+        temp_file_path = file_path + TEMP_FILE_SUFFIX
+        urllib.request.urlretrieve(file_url, temp_file_path)
+
+        # verify if another copy already exist
+        if os.path.exists(file_path):
+            os.remove(file_path)
+
+        # rename downloaded file
+        os.rename(temp_file_path, file_path)
+
+    def _verify_file_md5(self, file_path, md5_file_path):
+        is_verified = False
+
+        if os.path.exists(file_path) and os.path.exists(md5_file_path):
+            file_name = os.path.basename(file_path)
+
+            with open(os.path.normpath(md5_file_path), mode="r") as md5_file:
+                for line in md5_file:
+                    split_data = line.strip().split(None, 1)
+
+                    if split_data[1] == file_name and split_data[0] == self._md5(file_path):
+                        is_verified = True
+                        break
+
+        return is_verified
 
     def load_dictionary(self, dictionary_path):
         loaded_dictionary = dict()
@@ -62,21 +105,44 @@ class CwGen:
             return [0, 0, 0, {}]
 
     def get_ebook2cw(self):
-        cwgen_script_path = os.path.dirname(sys.argv[0])
-        ebook2cw_folder_path = os.path.normpath(os.path.join(
-            cwgen_script_path, 'Ext', 'ebook2cw'))
-        print(cwgen_script_path)
-        print(ebook2cw_folder_path)
+        if_downloaded_ok = False
 
-        if not os.path.exists(ebook2cw_folder_path):
-            os.makedirs(ebook2cw_folder_path)
+        BASE_URL = 'https://fkurz.net/ham/ebook2cw/'
+        EXECUTABLE_BASE_NAME = 'ebook2cw'
+        HASH_FILE_NAME = 'md5sums-bin.txt'
 
-        ebook2cw_url = 'https://fkurz.net/ham/ebook2cw/ebook2cw'
+        current_os = platform.system()
+        if current_os == 'Windows' or current_os == 'Linux':
+            cwgen_path = os.path.dirname(sys.argv[0])
+            executable_local_base_path = os.path.normpath(os.path.join(
+                cwgen_path, 'ebook2cw'))
 
-        if platform.system() == 'Windows':
-            ebook2cw_url += '.exe'
+            # prepare files urls/paths
+            executable_name = EXECUTABLE_BASE_NAME
+            if current_os == 'Windows':
+                executable_name += '.exe'
+            executable_url = BASE_URL + executable_name
+            executable_local_path = os.path.normpath(os.path.join(
+                executable_local_base_path, executable_name))
 
-        urllib.request.urlretrieve(ebook2cw_url, ebook2cw_folder_path)
+            hash_file_url = BASE_URL + HASH_FILE_NAME
+            hash_file_local_path = os.path.normpath(os.path.join(
+                executable_local_base_path, HASH_FILE_NAME))
+
+            # download files (executable + md5)
+            self._get_file_from_web(
+                executable_url, executable_local_path)
+            self._get_file_from_web(
+                hash_file_url, hash_file_local_path)
+
+            # verify executable integrity
+            if self._verify_file_md5(
+                    executable_local_path, hash_file_local_path):
+                if_downloaded_ok = True
+            else:
+                os.remove(executable_local_path)
+
+        return if_downloaded_ok
 
 
 def main():
