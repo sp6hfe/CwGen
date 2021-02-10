@@ -1,5 +1,7 @@
 import os
+import platform
 import sys
+import urllib.request
 
 dict_dir_name = "ispell-pl-20021127"
 
@@ -59,6 +61,23 @@ class CwGen:
         else:
             return [0, 0, 0, {}]
 
+    def get_ebook2cw(self):
+        cwgen_script_path = os.path.dirname(sys.argv[0])
+        ebook2cw_folder_path = os.path.normpath(os.path.join(
+            cwgen_script_path, 'Ext', 'ebook2cw'))
+        print(cwgen_script_path)
+        print(ebook2cw_folder_path)
+
+        if not os.path.exists(ebook2cw_folder_path):
+            os.makedirs(ebook2cw_folder_path)
+
+        ebook2cw_url = 'https://fkurz.net/ham/ebook2cw/ebook2cw'
+
+        if platform.system() == 'Windows':
+            ebook2cw_url += '.exe'
+
+        urllib.request.urlretrieve(ebook2cw_url, ebook2cw_folder_path)
+
 
 def main():
     test_dict = "A"
@@ -71,6 +90,8 @@ def main():
 
     words_stat = cw_gen.get_dictionary_stat(dict_path)
     print(words_stat)
+
+    cw_gen.get_ebook2cw()
 
 
 if __name__ == '__main__':
