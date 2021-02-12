@@ -9,10 +9,22 @@ dict_dir_name = "ispell-pl-20021127"
 
 
 class CwGen:
+    """Class handling CW learning material generation"""
+
     def __init__(self):
+        """Class initialization"""
+
         self.dictionary_list = []
 
     def _md5(self, file_path):
+        """Calculate MD5 hash out of provided file
+
+        Args:
+            file_path (str): Path to the file to calculate MD5 out of
+
+        Returns:
+            string: A string containing HEX representation of calculated MD5 hash
+        """
         hash_md5 = hashlib.md5()
         with open(file_path, "rb") as f:
             for data_chunk in iter(lambda: f.read(4096), b""):
@@ -21,6 +33,19 @@ class CwGen:
         return hash_md5.hexdigest()
 
     def _get_file_from_web(self, file_url, file_path):
+        """Downloads specified file from provided URL and store in selected location.
+            In order to keep data integrity file after downloading is saved with
+            suffix and later on is renamed to the original name assuring already
+            existing file gets deleted.
+
+        Args:
+            file_url  (str): URL of the file to download
+            file_path (str): Path to the resulting file (incl. file name)
+
+        Returns:
+            None
+        """
+
         TEMP_FILE_SUFFIX = '_tmp'
 
         # make sure directories are there
@@ -40,6 +65,19 @@ class CwGen:
         os.rename(temp_file_path, file_path)
 
     def _verify_file_md5(self, file_path, md5_file_path):
+        """Verifies if file's calculated MD5 hash match the one stored in other file.
+            File with pre-calculated MD5 hashes should contain
+            a row with hash and file name separated by space.
+
+        Args:
+            file_path     (str): Path to the file being verified
+            md5_file_path (str): Path to the file containing pre-calculated MD5 hashes
+
+        Returns:
+            bool: True when MD5 verification succeeded, False otherwise
+
+        """
+
         is_verified = False
 
         if os.path.exists(file_path) and os.path.exists(md5_file_path):
@@ -56,6 +94,21 @@ class CwGen:
         return is_verified
 
     def _get_words_stat(self, words_dictionary):
+        """Generate a statistics on a dictionary data.
+
+        Args:
+            words_dictionary (dict): as generated in _load_dictionary_from_file()
+
+        Returns:
+            dict: Dictionary
+                'words_count' -> number of words in dictionary
+                'min_length' -> minimal length of the words
+                'max_length' -> maximal length of the words
+                'words_stat' -> Dictionary{key, words_by_key}
+                    key -> word length
+                    words_by_key -> number of words having the same length
+        """
+
         stat = {}
         words_stat = {}
 
@@ -80,6 +133,26 @@ class CwGen:
         return stat
 
     def _load_dictionary_from_file(self, file_path):
+        """Load dictionary data from file
+            and calculate its statistics.
+
+        Args:
+            file_path (str): Path to the dictionary file
+
+        Returns:
+            dict: Dictionary
+                'uuid': generated UUID
+                'name': file name
+                'path': dictionary path
+                'stat': words statistics as generated in _get_words_stat()
+                'data': Dictionary {key, value}
+                    key: word length
+                    value (list): [word, meta_data, occurence]
+                        word (str): a word
+                        meta_data (str): additional information (ispell dictionaries)
+                        occurence (int): number of occurences in a probe (the higher the more frequently used)
+        """
+
         result = {}
         words_dictionary = {}
 
@@ -112,16 +185,25 @@ class CwGen:
 
         # assemble result
         if len(words_dictionary) > 0:
+            result['uuid'] = uuid.uuid1()
             result['name'] = os.path.basename(file_path)
             result['path'] = file_path
             result['stat'] = self._get_words_stat(words_dictionary)
             result['data'] = words_dictionary
-            result['uuid'] = uuid.uuid1()
 
         return result
 
     def add_dictionary(self, file_path):
-        # add only distinct file
+        """Adds dictionary (loaded from file) to the internal list
+
+        Args:
+            file_path (str): Path to the dictionary file
+
+        Returns:
+            bool: True when dictionary was added, False otherwise
+        """
+
+        # add only distinct file (verification based on file path)
         for dictionary in self.dictionary_list:
             if os.path.normpath(dictionary['path']) == os.path.normpath(file_path):
                 return False
@@ -136,6 +218,16 @@ class CwGen:
         return True
 
     def remove_dictionary(self, dictionary_uuid):
+        """Removes dictionary from the internal list
+            using UUID to select right one.
+
+        Args:
+            dictionary_uuid (str): Dictionary assigned UUID
+
+        Returns:
+            bool: True when dictionary was removed, False otherwise
+        """
+
         if_removed = False
 
         for index, dictionary in enumerate(self.dictionary_list):
@@ -147,6 +239,23 @@ class CwGen:
         return if_removed
 
     def get_dictionaries_stat(self):
+        """Gets aggregated statistics of the data loaded from all added dictionaries
+
+        Args:
+            None
+
+        Returns:
+            dict: Dictionary
+                    'overal': -> dict:
+                        'words_count': -> total number of words colected
+                        'min_length':  -> minimal word length
+                        'max_length:   -> maximal word length
+                    'data': -> list of dict:
+                        'uuid': -> dictionary uuid (generated for identification purposes)
+                        'name': -> dictionary name
+                        'stat': -> words statistics returned by _get_words_stat()
+        """
+
         stat = {}
         overal_stat = {}
         dictionaries_data = []
@@ -157,9 +266,9 @@ class CwGen:
 
         for dictionary in self.dictionary_list:
             data = {}
+            data['uuid'] = dictionary['uuid']
             data['name'] = dictionary['name']
             data['stat'] = dictionary['stat']
-            data['uuid'] = dictionary['uuid']
             dictionaries_data.append(data)
 
             total_words_count += dictionary['stat']['words_count']
@@ -180,6 +289,16 @@ class CwGen:
         return stat
 
     def get_ebook2cw(self):
+        """Downloads proper version of the ebook2cw
+            performing MD5 verification for integrity check.
+
+        Args:
+            None
+
+        Returns:
+            bool: True when executable was downloaded, False otherwise
+        """
+
         if_downloaded_ok = False
 
         BASE_URL = 'https://fkurz.net/ham/ebook2cw/'
@@ -221,40 +340,7 @@ class CwGen:
 
 
 def main():
-    # test_dict1 = "A"
-    # test_dict2 = "B"
-
-    # cw_gen = CwGen()
-
-    # script_path = os.path.dirname(sys.argv[0])
-
-    # dict1_path = os.path.join(os.path.dirname(
-    #     script_path), dict_dir_name, test_dict1)
-
-    # dict2_path = os.path.join(os.path.dirname(
-    #     script_path), dict_dir_name, test_dict2)
-
-    # cw_gen.add_dictionary(dict1_path)
-    # cw_gen.add_dictionary(dict2_path)
-
-    # dictionaries_stat = cw_gen.get_dictionaries_stat()
-    # print(dictionaries_stat)
-
-    # uuid1 = dictionaries_stat['data'][0]['uuid']
-    # uuid2 = dictionaries_stat['data'][1]['uuid']
-    # print(uuid)
-
-    # cw_gen.remove_dictionary(uuid1)
-
-    # dictionaries_stat = cw_gen.get_dictionaries_stat()
-    # print(dictionaries_stat)
-
-    # cw_gen.remove_dictionary(uuid2)
-
-    # dictionaries_stat = cw_gen.get_dictionaries_stat()
-    # print(dictionaries_stat)
-
-    # cw_gen.get_ebook2cw()
+    print("To be implemented...")
 
 
 if __name__ == '__main__':

@@ -48,6 +48,8 @@ class CwGenUI:
     LETTERS_MAX_RANGE_STOP_KEY = '-LETTERS MAX RANGE STOP-'
 
     def __init__(self):
+        """Class initialization"""
+
         # Members
         self.files_table_idx = -1
         self.cw_gen = cwgen.CwGen()
@@ -60,12 +62,11 @@ class CwGenUI:
 
         # GUI - header columns -> name, column size, visible?
         files_data_header = [
+            ("UUID",    0, False),
             ("Name",   20, True),
-            ("Path",    0, False),
             ("Words",   6, True),
             ("Min len", 7, True),
             ("Max len", 7, True),
-            ("Stat",    0, False)
         ]
 
         files_data_table = [sg.Table(values=[],
@@ -107,71 +108,118 @@ class CwGenUI:
         # Configure and create the window
         self.window = sg.Window(self.WINDOW_DESCRIPTION, layout)
 
+    def _update_ui(self, values):
+        """Updates UI according to the data collected by cwgen
+
+        Args:
+            values (dict): Dictionary containing GUI event values
+
+        Returns:
+            None
+        """
+
+        table_data = []
+        sliders_range = (0, 0)
+
+        # get current stat on data gathered so far
+        stat = self.cw_gen.get_dictionaries_stat()
+
+        # generate updated data for UI elements
+        if len(stat) > 0:
+            for dictionary_data in stat['data']:
+                row = [dictionary_data['uuid'],
+                       dictionary_data['name'],
+                       dictionary_data['stat']['words_count'],
+                       dictionary_data['stat']['min_length'],
+                       dictionary_data['stat']['max_length']]
+                table_data.append(row)
+
+            sliders_range = (stat['overal']['min_length'],
+                             stat['overal']['max_length'])
+
+        # update UI
+        self.window[self.FILES_DATA_TABLE_KEY].update(
+            values=table_data)
+        self.update_words_length_sliders_config(
+            values, (sliders_range))
+
     def handle_dictionary_add(self, values):
+        """Handle new dictionary addition
+            by passing file path to cwgen. UI gets updated.
+
+        Args:
+            values (dict): Dictionary containing GUI event values
+
+        Returns:
+            None
+        """
+
         # on file selection cancel values[FILE_PATH_INPUT_KEY] is empty
         if len(values[self.FILE_PATH_INPUT_KEY]) > 0:
             file_path = os.path.normpath(values[self.FILE_PATH_INPUT_KEY])
             if os.path.isfile(file_path):
-                file_name = os.path.basename(file_path)
-                current_files_data = self.window[self.FILES_DATA_TABLE_KEY].get(
-                )
-                # file name should be distinct
-                if file_name not in [row[0] for row in current_files_data]:
-                    file_stat = self.cw_gen.get_dictionary_stat(file_path)
-                    # add file when parsed properly
-                    if file_stat[0] > 0:
-                        current_files_data.append(
-                            [file_name, file_path, file_stat[0], file_stat[1], file_stat[2], file_stat[3]])
-                        self.window[self.FILES_DATA_TABLE_KEY].update(
-                            values=current_files_data)
-                        self.update_words_length_sliders_config(
-                            values, self.calculate_words_length_range())
-        # clear file path storage to properly handle CANCEL situation
-        self.window[self.FILE_PATH_INPUT_KEY].update(value="")
+                if self.cw_gen.add_dictionary(file_path):
+                    self._update_ui(values)
+
+            # clear file path storage to properly handle CANCEL situation
+            self.window[self.FILE_PATH_INPUT_KEY].update(value="")
 
     def handle_dictionary_delete(self, values):
+        """Handle dictionary deletion
+            by passing its generated UUID to cwgen. UI gets updated.
+
+        Args:
+            values (dict): Dictionary containing GUI event values
+
+        Returns:
+            None
+        """
         # self.files_table_idx == -1 when no dictionary in the table is selected
         if self.files_table_idx >= 0:
-            updated_files_data = []
-            current_files_data = self.window[self.FILES_DATA_TABLE_KEY].get()
-            # locate and remove data related to selected record in the files table
-            for idx, _files_data in enumerate(current_files_data):
-                if idx is not self.files_table_idx:
-                    updated_files_data.append(current_files_data[idx])
-            self.window[self.FILES_DATA_TABLE_KEY].update(
-                values=updated_files_data)
-            self.update_words_length_sliders_config(
-                values, self.calculate_words_length_range())
+            table_data = self.window[self.FILES_DATA_TABLE_KEY].get()
+            selected_dictionary_uuid = table_data[self.files_table_idx][0]
+            if self.cw_gen.remove_dictionary(selected_dictionary_uuid):
+                self._update_ui(values)
+
             # set table index to negative to properly handle dictionary remove button click
             self.files_table_idx = -1
 
     def handle_words_length_sliders(self, event, values):
+        """Handle words length sliders movement
+            to not let their values become ridiculous.
+
+        Args:
+            event (str): GUI event name
+            values (dict): Dictionary containing GUI event values
+
+        Returns:
+            None
+        """
+
         slider_min_val = values[self.LETTERS_MIN_KEY]
         slider_max_val = values[self.LETTERS_MAX_KEY]
 
         if event == self.LETTERS_MIN_KEY:
             if slider_min_val > slider_max_val:
-                self.window[self.LETTERS_MAX_KEY].update(value=slider_min_val)
+                self.window[self.LETTERS_MAX_KEY].update(
+                    value=slider_min_val)
         if event == self.LETTERS_MAX_KEY:
             if slider_max_val < slider_min_val:
-                self.window[self.LETTERS_MIN_KEY].update(value=slider_max_val)
-
-    def calculate_words_length_range(self):
-        letters_min_count = 0
-        letters_max_count = 0
-        current_files_data = self.window[self.FILES_DATA_TABLE_KEY].get()
-
-        if len(current_files_data) > 0:
-            letters_min_count = 1000
-            for _name, _path, _length, letters_min, letters_max, _stat in current_files_data:
-                if letters_min_count > letters_min:
-                    letters_min_count = letters_min
-                if letters_max_count < letters_max:
-                    letters_max_count = letters_max
-
-        return (letters_min_count, letters_max_count)
+                self.window[self.LETTERS_MIN_KEY].update(
+                    value=slider_max_val)
 
     def update_words_length_sliders_config(self, values, new_range):
+        """Updates UI part related to words length sliders change their range
+            assuring that sliders values gets updated when needed
+
+        Args:
+            values (dict): Dictionary containing GUI event values
+            new_range (tuple): New value range
+
+        Returns:
+            None
+        """
+
         current_range_min, current_range_max = self.window[self.LETTERS_MIN_KEY].Range
         current_min_val = int(values[self.LETTERS_MIN_KEY])
         current_max_val = int(values[self.LETTERS_MAX_KEY])
@@ -207,6 +255,16 @@ class CwGenUI:
             value=new_range_max)
 
     def handleGui(self):
+        """GUI main loop
+            where all events gets dispatched for handling
+
+        Args:
+            None
+
+        Returns:
+            None
+        """
+
         event, values = self.window.read()
         # See if user wants to quit or window was closed
         if event == sg.WINDOW_CLOSED:
