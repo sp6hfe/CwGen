@@ -13,7 +13,9 @@ class CwGen:
     def __init__(self):
         """Class initialization"""
 
-        self.e2cw = e2cw.Ebook2Cw(os.path.dirname(sys.argv[0]))
+        DATA_FOLDER = 'data'
+
+        self.e2cw = e2cw.Ebook2Cw(os.path.dirname(sys.argv[0]), DATA_FOLDER)
         self.dictionary_list = []
 
     def _get_words_stat(self, words_dictionary):
