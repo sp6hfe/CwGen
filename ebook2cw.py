@@ -76,9 +76,9 @@ class Ebook2Cw:
                 executable_local_base_path, HASH_FILE_NAME))
 
             # download files (executable + md5)
-            web.get_file_from_web(
+            helpers.get_file_from_web(
                 executable_url, executable_local_path)
-            web.get_file_from_web(
+            helpers.get_file_from_web(
                 hash_file_url, hash_file_local_path)
 
             # verify executable integrity
