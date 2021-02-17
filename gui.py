@@ -121,12 +121,13 @@ class CwGenUI:
         table_data = []
         sliders_range = (0, 0)
 
-        # get current stat on data gathered so far
-        stat = self.cw_gen.get_dictionaries_stat()
+        # get information related to already loaded data
+        dictionaries_info = self.cw_gen.get_dictionaries_info()
+        words_info = self.cw_gen.get_words_info()
 
         # generate updated data for UI elements
-        if len(stat) > 0:
-            for dictionary_data in stat['data']:
+        if len(dictionaries_info) > 0:
+            for dictionary_data in dictionaries_info:
                 row = [dictionary_data['uuid'],
                        dictionary_data['name'],
                        dictionary_data['stat']['words_count'],
@@ -134,8 +135,9 @@ class CwGenUI:
                        dictionary_data['stat']['max_length']]
                 table_data.append(row)
 
-            sliders_range = (stat['overal']['min_length'],
-                             stat['overal']['max_length'])
+            if len(words_info) > 0:
+                sliders_range = (words_info['min_length'],
+                                 words_info['max_length'])
 
         # update UI
         self.window[self.FILES_DATA_TABLE_KEY].update(

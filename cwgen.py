@@ -1,10 +1,7 @@
 import ebook2cw as e2cw
-import helpers
 import os
 import sys
 import uuid
-
-dict_dir_name = "ispell-pl-20021127"
 
 
 class CwGen:
@@ -69,7 +66,6 @@ class CwGen:
                 'uuid': generated UUID
                 'name': file name
                 'path': dictionary path
-                'stat': words statistics as generated in _get_words_stat()
                 'data': Dictionary {key, value}
                     key: word length
                     value (list): [word, meta_data, occurence]
@@ -113,7 +109,6 @@ class CwGen:
             result['uuid'] = uuid.uuid1()
             result['name'] = os.path.basename(file_path)
             result['path'] = file_path
-            result['stat'] = self._get_words_stat(words_dictionary)
             result['data'] = words_dictionary
 
         return result
@@ -163,55 +158,77 @@ class CwGen:
 
         return if_removed
 
-    def get_dictionaries_stat(self):
-        """Gets aggregated statistics of the data loaded from all added dictionaries
+    def get_dictionaries_info(self):
+        """Gets basic information of all loaded dictionaries
+
+        Args:
+            None
+
+        Returns:
+            list: list of dict
+                'uuid': -> dictionary uuid (generated for identification purposes)
+                'name': -> dictionary name
+                'stat': -> words statistics returned by _get_words_stat()
+        """
+
+        dictionaries_info = []
+
+        for dictionary in self.dictionary_list:
+            data = {}
+            data['uuid'] = dictionary['uuid']
+            data['name'] = dictionary['name']
+            data['stat'] = self._get_words_stat(dictionary['data'])
+            dictionaries_info.append(data)
+
+        return dictionaries_info
+
+    def get_words_info(self):
+        """Gets aggregated words info of all  loaded dictionaries.
 
         Args:
             None
 
         Returns:
             dict: Dictionary
-                    'overal': -> dict:
-                        'words_count': -> total number of words colected
-                        'min_length':  -> minimal word length
-                        'max_length:   -> maximal word length
-                    'data': -> list of dict:
-                        'uuid': -> dictionary uuid (generated for identification purposes)
-                        'name': -> dictionary name
-                        'stat': -> words statistics returned by _get_words_stat()
+                'words_count': -> total number of words
+                'min_length': -> minimal word length
+                'max_length': -> maximal word length
+                'words_stat': -> Dictionary{key, words_by_key}
+                    key -> word length
+                    words_by_key -> number of words having the same length
         """
 
-        stat = {}
-        overal_stat = {}
-        dictionaries_data = []
-
+        words_info = {}
+        aggregated_words_stat = {}
+        words_count = 0
         min_length = 1000
         max_length = 0
-        total_words_count = 0
 
         for dictionary in self.dictionary_list:
-            data = {}
-            data['uuid'] = dictionary['uuid']
-            data['name'] = dictionary['name']
-            data['stat'] = dictionary['stat']
-            dictionaries_data.append(data)
+            single_stat = self._get_words_stat(dictionary['data'])
 
-            total_words_count += dictionary['stat']['words_count']
+            # aggregate data - if any
+            if len(single_stat) > 0:
+                words_count += single_stat['words_count']
+                if single_stat['min_length'] < min_length:
+                    min_length = single_stat['min_length']
+                if single_stat['max_length'] > max_length:
+                    max_length = single_stat['max_length']
 
-            if dictionary['stat']['min_length'] < min_length:
-                min_length = dictionary['stat']['min_length']
-            if dictionary['stat']['max_length'] > max_length:
-                max_length = dictionary['stat']['max_length']
+                for key, value in single_stat['words_stat'].items():
+                    if key in aggregated_words_stat.keys():
+                        aggregated_words_stat[key] += value
+                    else:
+                        aggregated_words_stat.setdefault(key, value)
 
-        if len(dictionaries_data) > 0:
-            overal_stat['words_count'] = total_words_count
-            overal_stat['min_length'] = min_length
-            overal_stat['max_length'] = max_length
+        # assemble information - if any
+        if words_count > 0:
+            words_info['words_count'] = words_count
+            words_info['min_length'] = min_length
+            words_info['max_length'] = max_length
+            words_info['words_stat'] = aggregated_words_stat
 
-            stat['overal'] = overal_stat
-            stat['data'] = dictionaries_data
-
-        return stat
+        return words_info
 
     def get_ebook2cw(self):
         """Downloads proper version of the ebook2cw
