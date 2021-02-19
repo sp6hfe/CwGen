@@ -36,6 +36,7 @@ class CwGenUI:
 
     # GUI - table config
     FILES_DATA_TABLE_KEY = '-FILES DATA-'
+    WORDS_FILTERED_TABLE_KEY = '-WORDS FILTERED-'
 
     # GUI - sliders config
     H_SLIDER_WIDTH = 21
@@ -47,6 +48,9 @@ class CwGenUI:
     LETTERS_MAX_RANGE_START_KEY = '-LETTERS MAX RANGE START-'
     LETTERS_MAX_RANGE_STOP_KEY = '-LETTERS MAX RANGE STOP-'
 
+    # GUI - combo config
+    COMBO_LETTERS_SET_KEY = '-LEY+TTERS SET-'
+
     def __init__(self):
         """Class initialization"""
 
@@ -54,21 +58,21 @@ class CwGenUI:
         self.files_table_idx = -1
         self.cw_gen = cwgen.CwGen()
 
-        # GUI - create building blocks
-        files_operation = [sg.Input(enable_events=True, visible=False, key=self.FILE_PATH_INPUT_KEY),
-                           sg.FileBrowse(button_text="Add", file_types=(
-                               ("ALL Files", "*.*"), ("CWOPS sessions", "*.cwo")), target=self.FILE_PATH_INPUT_KEY, key=self.FILE_BROWSE_KEY),
-                           sg.Button(button_text="Remove selected", key=self.FILE_REMOVE_KEY)]
-
         # GUI - header columns -> name, column size, visible?
         files_data_header = [
             ("UUID",    0, False),
             ("Name",   20, True),
             ("Words",   6, True),
             ("Min len", 7, True),
-            ("Max len", 7, True),
+            ("Max len", 7, True)
         ]
 
+        words_filtered_header = [
+            ("Length", 15, True),
+            ("Count", 15, True)
+        ]
+
+        # GUI - tables
         files_data_table = [sg.Table(values=[],
                                      headings=[name for name, _size,
                                                _visible in files_data_header],
@@ -82,6 +86,22 @@ class CwGenUI:
                                      enable_events=True,
                                      key=self.FILES_DATA_TABLE_KEY
                                      )]
+
+        words_filtered_table = [sg.Table(values=[],
+                                         headings=[
+                                             name for name, _size, _visible in words_filtered_header],
+                                         col_widths=[
+                                             size for _name, size, _visible in words_filtered_header],
+                                         num_rows=10,
+                                         justification='left',
+                                         auto_size_columns=False,
+                                         key=self.WORDS_FILTERED_TABLE_KEY)]
+
+        # GUI - rows
+        files_operation = [sg.Input(enable_events=True, visible=False, key=self.FILE_PATH_INPUT_KEY),
+                           sg.FileBrowse(button_text="Add", file_types=(
+                               ("ALL Files", "*.*"), ("CWOPS sessions", "*.cwo")), target=self.FILE_PATH_INPUT_KEY, key=self.FILE_BROWSE_KEY),
+                           sg.Button(button_text="Remove selected", key=self.FILE_REMOVE_KEY)]
 
         letters_min = [sg.Text("MIN:", size=(4, 1)),
                        sg.Text("0", size=(2, 1),
@@ -97,8 +117,15 @@ class CwGenUI:
                                  orientation='h', enable_events=True, key=self.LETTERS_MAX_KEY),
                        sg.Text("0", size=(2, 1), key=self.LETTERS_MAX_RANGE_STOP_KEY)]
 
-        left_col = [[sg.Frame('Dictionaries', [files_operation, files_data_table])],
-                    [sg.Frame('Words letters count range', [letters_min, letters_max])]]
+        letters_set = [sg.Text('From set:'),
+                       sg.Combo(values=(['All']), size=(15, 1), key=self.COMBO_LETTERS_SET_KEY)]
+
+        # GUI - columns
+        left_col = [
+            [sg.Frame('Dictionaries', [files_operation, files_data_table])],
+            [sg.Frame('Letters', [letters_set])],
+            [sg.Frame('Words length', [letters_min, letters_max])],
+            [sg.Frame('Words filtered', [words_filtered_table])]]
 
         right_col = []
 
