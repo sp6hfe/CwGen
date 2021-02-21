@@ -232,7 +232,19 @@ class CwGen:
 
         return words_info
 
-    def get_ebook2cw_version(self):
+    def get_ebook2cw_version_online(self):
+        """Gets online ebook2cw version.
+
+        Args:
+            None
+
+        Returns:
+            str: "0" when service is not accessible, otherwise version string
+        """
+
+        return self.e2cw.get_executable_version_online()
+
+    def get_ebook2cw_version_local(self):
         """Gets local ebook2cw version.
 
         Args:
@@ -242,7 +254,7 @@ class CwGen:
             str: "0" when program is not accessible, otherwise version string
         """
 
-        return self.e2cw.get_executable_version()
+        return self.e2cw.get_executable_version_local()
 
     def get_ebook2cw(self, force_latest):
         """Downloads proper version of the ebook2cw

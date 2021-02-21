@@ -14,6 +14,7 @@ class Ebook2Cw:
         BASE_URL = 'https://fkurz.net/ham/ebook2cw/'
         EXECUTABLE_BASE_NAME = 'ebook2cw'
         HASH_FILE_NAME = 'md5sums-bin.txt'
+        CHANGELOG_FILE_NAME = 'ChangeLog'
 
         self.is_os_supported = False
 
@@ -30,6 +31,10 @@ class Ebook2Cw:
         self.hash_file_url = BASE_URL + HASH_FILE_NAME
         self.hash_file_local_path = os.path.normpath(os.path.join(
             ebook2cw_folder, HASH_FILE_NAME))
+
+        self.changelog_file_url = BASE_URL + CHANGELOG_FILE_NAME
+        self.changelog_file_local_path = os.path.normpath(os.path.join(
+            ebook2cw_folder, CHANGELOG_FILE_NAME))
 
         current_os = platform.system()
 
@@ -106,7 +111,24 @@ class Ebook2Cw:
 
         return self.is_os_supported
 
-    def get_executable_version(self):
+    def get_executable_version_online(self):
+        version = '0'
+
+        if self.is_os_supported:
+            helpers.get_file_from_web(
+                self.changelog_file_url, self.changelog_file_local_path)
+
+            if os.path.exists(self.changelog_file_local_path):
+                with open(self.changelog_file_local_path, 'r') as changelog:
+                    data = changelog.readline()
+                extracted_version = data.split()[0]
+                # basic check for version length which is at least X.Y.Z
+                if len(extracted_version) >= 5:
+                    version = extracted_version
+
+        return version
+
+    def get_executable_version_local(self):
         version = '0'
 
         if self.is_os_supported and self._is_executable_present():
