@@ -5,12 +5,18 @@ import platform
 
 class Ebook2Cw:
     def __init__(self, base_path, data_folder):
-        """Class initialization"""
+        """Class initialization.
+            Setup internal data and detect if running on supported OS.
+            Currently supported platforms: Windows, Linux.
+        """
 
         BASE_URL = 'https://fkurz.net/ham/ebook2cw/'
         EXECUTABLE_BASE_NAME = 'ebook2cw'
         HASH_FILE_NAME = 'md5sums-bin.txt'
 
+        self.is_os_supported = False
+
+        # assembly paths and urls
         self.executable_url = BASE_URL + EXECUTABLE_BASE_NAME
         self.executable_local_path = os.path.normpath(os.path.join(
             base_path, data_folder, EXECUTABLE_BASE_NAME))
@@ -19,66 +25,111 @@ class Ebook2Cw:
         self.hash_file_local_path = os.path.normpath(os.path.join(
             base_path, data_folder, HASH_FILE_NAME))
 
-    def _verify_executable_against_md5_file(self, file_path, md5_file_path):
-        """Verifies if file's calculated MD5 hash match the one stored in other file.
-            File with pre-calculated MD5 hashes should contain
-            a row with hash and file name separated by space.
+        current_os = platform.system()
 
-        Args:
-            file_path     (str): Path to the file being verified
-            md5_file_path (str): Path to the file containing pre-calculated MD5 hashes
+        # check for supported OS'es
+        if current_os == 'Windows' or current_os == 'Linux':
+            self.is_os_supported = True
 
-        Returns:
-            bool: True when MD5 verification succeeded, False otherwise
+            # add executable's 'exe' extension for Windows
+            if current_os == 'Windows':
+                self.executable_url += '.exe'
+                self.executable_local_path += '.exe'
 
-        """
-
-        is_verified = False
-
-        if os.path.exists(file_path) and os.path.exists(md5_file_path):
-            file_name = os.path.basename(file_path)
-
-            with open(os.path.normpath(md5_file_path), mode="r") as md5_file:
-                for line in md5_file:
-                    split_data = line.strip().split(None, 1)
-
-                    if split_data[1] == file_name and split_data[0] == helpers.md5(file_path):
-                        is_verified = True
-                        break
-
-        return is_verified
-
-    def get_executable(self):
-        """Downloads latest version of the ebook2cw (OS speciffic)
-            performing download integrity check by MD5 verification.
+    def _verify_executable_against_md5_file(self):
+        """Verifies if ebook2cw file's calculated MD5 hash match the one stored
+            in relevant md5 file. Files are expected to exist in default location.
+            File with pre-calculated MD5 hashes should contain a row with hash
+            and file name separated by space.
 
         Args:
             None
 
         Returns:
-            bool: True when executable was downloaded, False otherwise
+            bool: True when MD5 verification succeeded, False otherwise
+        """
+
+        is_verified = False
+
+        if self.is_os_supported:
+            if os.path.exists(self.executable_local_path) and os.path.exists(self.hash_file_local_path):
+                executable_file_name = os.path.basename(
+                    self.executable_local_path)
+
+                with open(os.path.normpath(self.hash_file_local_path), mode="r") as md5_file:
+                    for line in md5_file:
+                        md5_data = line.strip().split(None, 1)
+
+                        # verify calculated and provided hash
+                        executable_md5 = helpers.md5(
+                            self.executable_local_path)
+                        if executable_file_name == md5_data[1] and executable_md5 == md5_data[0]:
+                            is_verified = True
+                            break
+
+        return is_verified
+
+    def os_supported(self):
+        """Returns if current OS is supported.
+            If not all fuctionalities will fail.
+
+        Args:
+            None
+
+        Returns:
+            bool: True when OS is supported, False otherwise
+        """
+
+        return self.is_os_supported
+
+    def is_executable_present(self, file_path):
+        """Returns if ebook2cw executable is available in default directory.
+
+        Args:
+            None
+
+        Returns:
+            bool: True when executable is available, False otherwise
+        """
+
+        is_executable_available = False
+
+        if self.is_os_supported:
+            # check if file is there
+            if os.path.exists(self.executable_local_path):
+                is_executable_available = True
+
+        return is_executable_available
+
+    def get_executable(self):
+        """Downloads latest version of the ebook2cw (OS speciffic)
+            performing download integrity check by MD5 verification.
+            In case of not supported OS download is not performed.
+
+        Args:
+            None
+
+        Returns:
+            bool: True when executable was downloaded and verified,
+                   False otherwise
         """
 
         if_downloaded_ok = False
 
-        current_os = platform.system()
-        if current_os == 'Windows' or current_os == 'Linux':
-            # add exe extension for Windows
-            if current_os == 'Windows':
-                self.executable_url += ".exe"
-                self.executable_local_path += '.exe'
-
+        if self.is_os_supported:
             # download files (executable + md5)
             helpers.get_file_from_web(
                 self.executable_url, self.executable_local_path)
             helpers.get_file_from_web(
                 self.hash_file_url, self.hash_file_local_path)
 
-            # verify executable integrity
-            if self._verify_executable_against_md5_file(
-                    self.executable_local_path, self.hash_file_local_path):
-                if_downloaded_ok = True
-            else:
-                os.remove(self.executable_local_path)
+            # verify if both files were downloaded
+            if os.path.exists(self.executable_local_path) and os.path.exists(self.hash_file_local_path):
+                # verify executable's integrity
+                if self._verify_executable_against_md5_file():
+                    if_downloaded_ok = True
+                else:
+                    os.remove(self.executable_local_path)
+                    os.remove(self.hash_file_local_path)
 
         return if_downloaded_ok
