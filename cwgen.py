@@ -10,9 +10,11 @@ class CwGen:
     def __init__(self):
         """Class initialization"""
 
-        DATA_FOLDER = 'data'
+        EBOOK2CW_FOLDER = 'ebook2cw'
 
-        self.e2cw = e2cw.Ebook2Cw(os.path.dirname(sys.argv[0]), DATA_FOLDER)
+        ebook2cw_folder = os.path.join(
+            os.path.dirname(sys.argv[0]), EBOOK2CW_FOLDER)
+        self.e2cw = e2cw.Ebook2Cw(ebook2cw_folder)
         self.dictionary_list = []
 
     def _get_words_stat(self, words_dictionary):
@@ -183,7 +185,7 @@ class CwGen:
         return dictionaries_info
 
     def get_words_info(self):
-        """Gets aggregated words info of all  loaded dictionaries.
+        """Gets aggregated words info from all loaded dictionaries.
 
         Args:
             None
@@ -230,7 +232,19 @@ class CwGen:
 
         return words_info
 
-    def get_ebook2cw(self):
+    def get_ebook2cw_version(self):
+        """Gets local ebook2cw version.
+
+        Args:
+            None
+
+        Returns:
+            str: "0" when program is not accessible, otherwise version string
+        """
+
+        return self.e2cw.get_executable_version()
+
+    def get_ebook2cw(self, force_latest):
         """Downloads proper version of the ebook2cw
             performing MD5 verification for integrity check.
 
@@ -240,7 +254,7 @@ class CwGen:
         Returns:
             bool: True when executable was downloaded, False otherwise
         """
-        return self.e2cw.get_executable()
+        return self.e2cw.get_executable(force_latest)
 
 
 def main():
