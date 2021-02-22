@@ -1,26 +1,8 @@
 import cwgen
 import os
-import subprocess
 import sys
 
-# PySimpleGUI to be installed using PIP if not available
-gui_lib_loaded = True
-try:
-    import PySimpleGUI as sg
-except ImportError:
-    gui_lib_loaded = False
-    print("Missing dependency: PySimpleGUI. Trying to install using PIP...")
-    try:
-        subprocess.check_call(
-            [sys.executable, "-m", "pip", "install", "PySimpleGUI"])
-    except:
-        sys.exit(
-            "Failed to install dependency: PySimpleGUI.\n\rIt's not reachable or PIP is not available.")
-    else:
-        print("Dependency: PySimpleGUI installed.")
-
-if not gui_lib_loaded:
-    import PySimpleGUI as sg
+import PySimpleGUI as sg
 
 
 class CwGenUI:
