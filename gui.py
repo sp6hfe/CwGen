@@ -25,11 +25,16 @@ if not gui_lib_loaded:
 
 class CwGenUI:
     # GUI - window config
-    WINDOW_DESCRIPTION = 'CW training files generator by SP6HFE'
+    WINDOW_DESCRIPTION = 'CW training material generator by SP6HFE'
+
+    # GUI - text config
+    E2CW_VER_LOCAL_KEY = '-E2CW VER LOCAL-'
+    E2CW_VER_ONLINE_KEY = '-E2CW VER ONLINE-'
 
     # GUI - button config
     FILE_BROWSE_KEY = '-ADD FILE-'
     FILE_REMOVE_KEY = '-REMOVE FILE-'
+    E2CW_DOWNLOAD_KEY = '-E2CW DOWNLOAD-'
 
     # GUI - input config
     FILE_PATH_INPUT_KEY = '-FILE PATH-'
@@ -47,6 +52,15 @@ class CwGenUI:
     LETTERS_MIN_RANGE_STOP_KEY = '-LETTERS MIN RANGE STOP-'
     LETTERS_MAX_RANGE_START_KEY = '-LETTERS MAX RANGE START-'
     LETTERS_MAX_RANGE_STOP_KEY = '-LETTERS MAX RANGE STOP-'
+    E2CW_WPM_KEY = '-E2CW WPM-'
+    E2CW_WPM_RANGE_START_KEY = '-E2CW WPM RANGE START-'
+    E2CW_WPM_RANGE_STOP_KEY = '-E2CW WPM RANGE STOP-'
+    E2CW_FARNS_KEY = '-E2CW FARNS-'
+    E2CW_FARNS_RANGE_START_KEY = '-E2CW FARNS RANGE START-'
+    E2CW_FARNS_RANGE_STOP_KEY = '-E2CW FARNS RANGE STOP-'
+    E2CW_PITCH_KEY = '-E2CW PITCH-'
+    E2CW_PITCH_RANGE_START_KEY = '-E2CW PITCH RANGE START-'
+    E2CW_PITCH_RANGE_STOP_KEY = '-E2CW PITCH RANGE STOP-'
 
     # GUI - combo config
     COMBO_LETTERS_SET_KEY = '-LEY+TTERS SET-'
@@ -57,6 +71,9 @@ class CwGenUI:
         # Members
         self.files_table_idx = -1
         self.cw_gen = cwgen.CwGen()
+
+        ebook2cw_version_local = self.cw_gen.get_ebook2cw_version_local()
+        ebook2cw_version_online = self.cw_gen.get_ebook2cw_version_online()
 
         # GUI - header columns -> name, column size, visible?
         files_data_header = [
@@ -120,14 +137,47 @@ class CwGenUI:
         letters_set = [sg.Text('From set:'),
                        sg.Combo(values=(['All']), size=(15, 1), key=self.COMBO_LETTERS_SET_KEY)]
 
+        e2cw_ver_local = [sg.Text('Local:', size=(7, 1)),
+                          sg.Text(ebook2cw_version_local, key=self.E2CW_VER_LOCAL_KEY)]
+
+        e2cw_ver_online = [sg.Text('Online:', size=(7, 1)),
+                           sg.Text(ebook2cw_version_online, key=self.E2CW_VER_ONLINE_KEY)]
+
+        e2cw_download_button = [
+            sg.Button('Download / Update', key=self.E2CW_DOWNLOAD_KEY)]
+
+        e2cw_wpm = [sg.Text("WPM:", size=(6, 1)),
+                    sg.Text("0", size=(2, 1),
+                            key=self.E2CW_WPM_RANGE_START_KEY),
+                    sg.Slider(range=(0, 0), size=(self.H_SLIDER_WIDTH, self.H_SLIDER_HEIGHT),
+                              orientation='h', enable_events=True, key=self.E2CW_WPM_KEY),
+                    sg.Text("0", size=(2, 1), key=self.E2CW_WPM_RANGE_STOP_KEY)]
+
+        e2cw_farns = [sg.Text("FARNS:", size=(6, 1)),
+                      sg.Text("0", size=(2, 1),
+                              key=self.E2CW_FARNS_RANGE_START_KEY),
+                      sg.Slider(range=(0, 0), size=(self.H_SLIDER_WIDTH, self.H_SLIDER_HEIGHT),
+                                orientation='h', enable_events=True, key=self.E2CW_FARNS_KEY),
+                      sg.Text("0", size=(2, 1), key=self.E2CW_FARNS_RANGE_STOP_KEY)]
+
+        e2cw_pitch = [sg.Text("PITCH:", size=(6, 1)),
+                      sg.Text("0", size=(2, 1),
+                              key=self.E2CW_PITCH_RANGE_START_KEY),
+                      sg.Slider(range=(0, 0), size=(self.H_SLIDER_WIDTH, self.H_SLIDER_HEIGHT),
+                                orientation='h', enable_events=True, key=self.E2CW_PITCH_KEY),
+                      sg.Text("0", size=(2, 1), key=self.E2CW_PITCH_RANGE_STOP_KEY)]
+
         # GUI - columns
         left_col = [
             [sg.Frame('Dictionaries', [files_operation, files_data_table])],
-            [sg.Frame('Letters', [letters_set])],
+            [sg.Frame('Words made of letters', [letters_set])],
             [sg.Frame('Words length', [letters_min, letters_max])],
             [sg.Frame('Words filtered', [words_filtered_table])]]
 
-        right_col = []
+        right_col = [
+            [sg.Frame('Ebook2CW version', [e2cw_ver_local,
+                                           e2cw_ver_online, e2cw_download_button])],
+            [sg.Frame('Audible parameters', [e2cw_wpm, e2cw_farns, e2cw_pitch])]]
 
         # App layout
         layout = [[sg.Column(left_col), sg.VSeparator(), sg.Column(right_col)]]
