@@ -13,7 +13,7 @@ class CwGen:
         E2CW_SUBFOLDER = 'ebook2cw'
 
         self.e2cw = e2cw.Ebook2Cw(os.path.join(
-            os.path.dirname(sys.argv[0]), E2CW_SUBFOLDER))
+            os.path.dirname(__file__), E2CW_SUBFOLDER))
         self.dictionary_list = []
 
     def _get_words_stat(self, words_dictionary):
@@ -270,6 +270,12 @@ class CwGen:
 
 def main():
     print("To be implemented...")
+
+    cwgen = CwGen()
+    local_ver = cwgen.get_ebook2cw_version_local()
+    online_ver = cwgen.get_ebook2cw_version_online()
+
+    print("local: " + local_ver + ", online: " + online_ver)
 
 
 if __name__ == '__main__':
