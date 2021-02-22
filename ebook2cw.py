@@ -135,10 +135,11 @@ class Ebook2Cw:
             output = subprocess.Popen(
                 [self.executable_local_path, "-help"], stdout=subprocess.PIPE).communicate()[0].decode()
             # correct response is: file_name version
-            extracted_version = output.split('\n', 1)[0].split()[1]
-            # basic check for version length which is at least X.Y.Z
-            if len(extracted_version) >= 5:
-                version = extracted_version
+            if len(output) > 0:
+                extracted_version = output.split('\n', 1)[0].split()[1]
+                # basic check for version length which is at least X.Y.Z
+                if len(extracted_version) >= 5:
+                    version = extracted_version
 
         return version
 
