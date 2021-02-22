@@ -10,11 +10,10 @@ class CwGen:
     def __init__(self):
         """Class initialization"""
 
-        EBOOK2CW_FOLDER = 'ebook2cw'
+        E2CW_SUBFOLDER = 'ebook2cw'
 
-        ebook2cw_folder = os.path.join(
-            os.path.dirname(sys.argv[0]), EBOOK2CW_FOLDER)
-        self.e2cw = e2cw.Ebook2Cw(ebook2cw_folder)
+        self.e2cw = e2cw.Ebook2Cw(os.path.join(
+            os.path.dirname(sys.argv[0]), E2CW_SUBFOLDER))
         self.dictionary_list = []
 
     def _get_words_stat(self, words_dictionary):
