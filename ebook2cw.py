@@ -133,7 +133,7 @@ class Ebook2Cw:
 
         if self.is_os_supported and self._is_executable_present():
             output = subprocess.Popen(
-                [self.executable_local_path, "-help"], stdout=subprocess.PIPE).communicate()[0].decode()
+                [str(self.executable_local_path), "-h"], stdout=subprocess.PIPE).communicate()[0].decode()
             # correct response is: file_name version
             if len(output) > 0:
                 extracted_version = output.split('\n', 1)[0].split()[1]
