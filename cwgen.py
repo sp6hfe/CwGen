@@ -12,6 +12,17 @@ class CwGen:
 
         E2CW_SUBFOLDER = 'ebook2cw'
 
+        self.letters_sets = {
+            'all': 'All letters and numbers'
+        }
+
+        self.training_generator_schemes = {
+            'rand':  'Random words',
+            'equal': 'Equalize number of all lengths',
+            'short': 'Prioritize shorter words',
+            'long':  'Prioritize longer words'
+        }
+
         self.e2cw = e2cw.Ebook2Cw(os.path.join(
             os.path.dirname(__file__), E2CW_SUBFOLDER))
         self.dictionary_list = []
@@ -230,6 +241,23 @@ class CwGen:
             words_info['words_stat'] = aggregated_words_stat
 
         return words_info
+
+    def get_letters_sets(self):
+        return self.letters_sets
+
+    def get_training_generator_schemes(self):
+        '''Gets information on supported material generation schemes.
+
+        Args:
+            None
+
+        Returns:
+            dict: Dictionary (key, value)
+                key -> material generation scheme identifier
+                value -> scheme description for UI
+        '''
+
+        return self.training_generator_schemes
 
     def get_words_stat_filtered(self, min_length, max_length):
         """Gets filtered words statistics containing words number

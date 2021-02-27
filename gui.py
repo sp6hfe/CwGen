@@ -45,7 +45,8 @@ class CwGenUI:
     E2CW_PITCH_RANGE_STOP_KEY = '-E2CW PITCH RANGE STOP-'
 
     # GUI - combo config
-    COMBO_LETTERS_SET_KEY = '-LEY+TTERS SET-'
+    COMBO_LETTERS_SET_KEY = '-LETTERS SET-'
+    COMBO_MATERIAL_GENERATION_KEY = '-MATERIAL GENERATION-'
 
     def __init__(self):
         """Class initialization"""
@@ -53,22 +54,24 @@ class CwGenUI:
         # Members
         self.files_table_idx = -1
         self.cw_gen = cwgen.CwGen()
+        self.letters_sets = self.cw_gen.get_letters_sets()
+        self.training_generator_schemes = self.cw_gen.get_training_generator_schemes()
 
         ebook2cw_version_local = self.cw_gen.get_ebook2cw_version_local()
         ebook2cw_version_online = self.cw_gen.get_ebook2cw_version_online()
 
         # GUI - header columns -> name, column size, visible?
         files_data_header = [
-            ("UUID",    0, False),
-            ("Name",   20, True),
-            ("Words",   6, True),
-            ("Min len", 7, True),
-            ("Max len", 7, True)
+            ("UUID",       0, False),
+            ("File name", 20, True),
+            ("Words",      6, True),
+            ("Min len",    7, True),
+            ("Max len",    7, True)
         ]
 
         words_filtered_header = [
-            ("Length", 15, True),
-            ("Count", 15, True)
+            ("Word length", 15, True),
+            ("Count",       15, True)
         ]
 
         # GUI - tables
@@ -79,7 +82,7 @@ class CwGenUI:
                                                  _visible in files_data_header],
                                      visible_column_map=[
                                          visible for _name, _size, visible in files_data_header],
-                                     num_rows=10,
+                                     num_rows=5,
                                      justification='left',
                                      auto_size_columns=False,
                                      enable_events=True,
@@ -91,7 +94,7 @@ class CwGenUI:
                                              name for name, _size, _visible in words_filtered_header],
                                          col_widths=[
                                              size for _name, size, _visible in words_filtered_header],
-                                         num_rows=10,
+                                         num_rows=5,
                                          justification='left',
                                          auto_size_columns=False,
                                          key=self.WORDS_FILTERED_TABLE_KEY)]
@@ -117,7 +120,24 @@ class CwGenUI:
                        sg.Text("0", size=(2, 1), key=self.LETTERS_MAX_RANGE_STOP_KEY)]
 
         letters_set = [sg.Text('From set:'),
-                       sg.Combo(values=(['All']), size=(15, 1), key=self.COMBO_LETTERS_SET_KEY)]
+                       sg.Combo(values=([name for _id, name in self.letters_sets.items()]),
+                                default_value=list(
+                                    self.letters_sets.items())[0][1],
+                                size=(max(len(name)
+                                          for _id, name in self.letters_sets.items()), 1),
+                                readonly=True,
+                                enable_events=True,
+                                key=self.COMBO_LETTERS_SET_KEY)]
+
+        generator_scheme = [sg.Text('Using scheme:'),
+                            sg.Combo(values=([name for _id, name in self.training_generator_schemes.items()]),
+                                     default_value=list(
+                                         self.training_generator_schemes.items())[0][1],
+                                     size=(
+                                         max(len(name) for _id, name in self.training_generator_schemes.items()), 1),
+                                     readonly=True,
+                                     enable_events=True,
+                                     key=self.COMBO_MATERIAL_GENERATION_KEY)]
 
         e2cw_ver_local = [sg.Text('Local:', size=(7, 1)),
                           sg.Text(ebook2cw_version_local, key=self.E2CW_VER_LOCAL_KEY)]
@@ -152,9 +172,10 @@ class CwGenUI:
         # GUI - columns
         left_col = [
             [sg.Frame('Dictionaries', [files_operation, files_data_table])],
-            [sg.Frame('Words made of letters', [letters_set])],
+            [sg.Frame('Letters selection', [letters_set])],
             [sg.Frame('Words length', [letters_min, letters_max])],
-            [sg.Frame('Words filtered', [words_filtered_table])]]
+            [sg.Frame('Material generation', [generator_scheme])],
+            [sg.Frame('Training material', [words_filtered_table])]]
 
         right_col = [
             [sg.Frame('Ebook2CW version', [e2cw_ver_local,
