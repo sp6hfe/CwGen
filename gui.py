@@ -201,8 +201,35 @@ class CwGenUI:
         # update UI
         self.window[self.FILES_DATA_TABLE_KEY].update(
             values=table_data)
-        self.update_words_length_sliders_config(
+        words_min_length, words_max_length = self.update_words_length_sliders_config(
             values, (sliders_range))
+        self._update_words_stat(values, words_min_length, words_max_length)
+
+    def _update_words_stat(self, values, min_length, max_length):
+        '''Updates words stat with filtered result
+            which allow user to see the data out of which
+            training material could be generated.
+
+        Args:
+            values (dict): Dictionary containing GUI event values
+            min_length (int): Minimal words length
+            max_length (int): Maximal words length
+
+        Returns:
+            None
+        '''
+
+        # get filtered words stat
+        words_stat = self.cw_gen.get_words_stat_filtered(
+            min_length, max_length)
+
+        # assemble summary table
+        stat = []
+        for key in sorted(words_stat.keys()):
+            stat.append([key, words_stat[key]])
+
+        # update UI
+        self.window[self.WORDS_FILTERED_TABLE_KEY].update(values=stat)
 
     def handle_dictionary_add(self, values):
         """Handle new dictionary addition
@@ -248,6 +275,7 @@ class CwGenUI:
     def handle_words_length_sliders(self, event, values):
         """Handle words length sliders movement
             to not let their values become ridiculous.
+            It also updates words statistics table.
 
         Args:
             event (str): GUI event name
@@ -257,17 +285,24 @@ class CwGenUI:
             None
         """
 
+        # get current positions
         slider_min_val = values[self.LETTERS_MIN_KEY]
         slider_max_val = values[self.LETTERS_MAX_KEY]
 
+        # update them if needed
         if event == self.LETTERS_MIN_KEY:
             if slider_min_val > slider_max_val:
+                slider_max_val = slider_min_val
                 self.window[self.LETTERS_MAX_KEY].update(
-                    value=slider_min_val)
+                    value=slider_max_val)
         if event == self.LETTERS_MAX_KEY:
             if slider_max_val < slider_min_val:
+                slider_min_val = slider_max_val
                 self.window[self.LETTERS_MIN_KEY].update(
-                    value=slider_max_val)
+                    value=slider_min_val)
+
+        # trigger words statistics calculation
+        self._update_words_stat(values, slider_min_val, slider_max_val)
 
     def update_words_length_sliders_config(self, values, new_range):
         """Updates UI part related to words length sliders change their range
@@ -278,7 +313,7 @@ class CwGenUI:
             new_range (tuple): New value range
 
         Returns:
-            None
+            new_min_val, new_max_val (tuple): Updated words length sliders values
         """
 
         current_range_min, current_range_max = self.window[self.LETTERS_MIN_KEY].Range
@@ -314,6 +349,8 @@ class CwGenUI:
             value=new_range_min)
         self.window[self.LETTERS_MAX_RANGE_STOP_KEY].update(
             value=new_range_max)
+
+        return (new_min_val, new_max_val)
 
     def handleGui(self):
         """GUI main loop

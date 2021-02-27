@@ -231,6 +231,40 @@ class CwGen:
 
         return words_info
 
+    def get_words_stat_filtered(self, min_length, max_length):
+        """Gets filtered words statistics containing words number
+            that would be used for training material generation.
+
+        Args:
+            min_length (int): Minimal words length
+            max_length (int): Maximal words length
+
+        Returns:
+            dict: Dictionary (key, words_by_key)
+                key -> word length
+                words_by_key -> number of words having the same length
+        """
+
+        words_stat = {}
+
+        # parameters verification
+        if min_length < 1 or max_length < min_length:
+            return words_stat
+
+        # aggregate and filter words statistics
+        for dictionary in self.dictionary_list:
+            stat = self._get_words_stat(dictionary['data'])['words_stat']
+            for word_len in stat.keys():
+                # filter words length
+                if word_len >= min_length and word_len <= max_length:
+                    # update result
+                    if word_len not in words_stat.keys():
+                        words_stat[word_len] = stat[word_len]
+                    else:
+                        words_stat[word_len] += stat[word_len]
+
+        return words_stat
+
     def get_ebook2cw_version_online(self):
         """Gets online ebook2cw version.
 
