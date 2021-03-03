@@ -259,13 +259,17 @@ class CwGen:
 
         return self.training_generator_schemes
 
-    def get_words_stat_filtered(self, min_length, max_length):
-        """Gets filtered words statistics containing words number
-            that would be used for training material generation.
+    def get_words_stat_filtered(self, min_length, max_length, letters_set, generator_scheme):
+        """Gets words statistics containing words length and their number
+            to visualize words set that can be used for training material generation.
 
         Args:
             min_length (int): Minimal words length
             max_length (int): Maximal words length
+            letters_set (str): Id of the letters set out of which words could be made up
+                (check self.letters_sets)
+            generator_scheme (str): Id of the geerator scheme to use
+                (check self.training_generator_schemes)
 
         Returns:
             dict: Dictionary (key, words_by_key)
@@ -275,8 +279,12 @@ class CwGen:
 
         words_stat = {}
 
-        # parameters verification
+        # parameters validation
         if min_length < 1 or max_length < min_length:
+            return words_stat
+        if letters_set not in self.letters_sets.keys():
+            return words_stat
+        if generator_scheme not in self.training_generator_schemes.keys():
             return words_stat
 
         # aggregate and filter words statistics

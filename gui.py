@@ -188,11 +188,12 @@ class CwGenUI:
         # Configure and create the window
         self.window = sg.Window(self.WINDOW_DESCRIPTION, layout)
 
-    def _update_ui(self, values):
-        """Updates UI according to the data collected by cwgen
+    def _update_ui_on_dictionary_set_change(self, values):
+        """Updates relevant UI elements according to change
+            in dictionary set.
 
         Args:
-            values (dict): Dictionary containing GUI event values
+            values (dict): Dictionary containing GUI elements values
 
         Returns:
             None
@@ -224,27 +225,41 @@ class CwGenUI:
             values=table_data)
         words_min_length, words_max_length = self.update_words_length_sliders_config(
             values, (sliders_range))
-        self._update_words_stat(values, words_min_length, words_max_length)
+        self._update_ui_on_words_filtering_change(values, words_min_length, words_max_length)
 
-    def _update_words_stat(self, values, min_length, max_length):
+    def _update_ui_on_words_filtering_change(self, values, min_length=None, max_length=None):
         '''Updates words stat with filtered result
             which allow user to see the data out of which
             training material could be generated.
 
         Args:
-            values (dict): Dictionary containing GUI event values
+            values():
             min_length (int): Minimal words length
+                passed in when reading the value from self.window is not yet updated
+                (window hadling did not advanced to the next loop yet)
             max_length (int): Maximal words length
+                passed in when reading the value from self.window is not yet updated
+                (window hadling did not advanced to the next loop yet)
 
         Returns:
             None
         '''
 
+        words_min_length = int(values[self.LETTERS_MIN_KEY])
+        words_max_length = int(values[self.LETTERS_MAX_KEY])
+        letters_set = self.window[self.COMBO_LETTERS_SET_KEY].get()
+        generator_scheme = self.window[self.COMBO_MATERIAL_GENERATION_KEY].get()
+
+        if min_length is not None:
+            words_min_length = min_length
+        if max_length is not None:
+            words_max_length = max_length
+
         # get filtered words stat
         words_stat = self.cw_gen.get_words_stat_filtered(
-            min_length, max_length)
+            words_min_length, words_max_length, letters_set, generator_scheme)
 
-        # assemble summary table
+        # assemble words stat table (sorted by word length)
         stat = []
         for key in sorted(words_stat.keys()):
             stat.append([key, words_stat[key]])
@@ -257,7 +272,7 @@ class CwGenUI:
             by passing file path to cwgen. UI gets updated.
 
         Args:
-            values (dict): Dictionary containing GUI event values
+            values (dict): Dictionary containing GUI elements values
 
         Returns:
             None
@@ -268,7 +283,7 @@ class CwGenUI:
             file_path = os.path.normpath(values[self.FILE_PATH_INPUT_KEY])
             if os.path.isfile(file_path):
                 if self.cw_gen.add_dictionary(file_path):
-                    self._update_ui(values)
+                    self._update_ui_on_dictionary_set_change(values)
 
             # clear file path storage to properly handle CANCEL situation
             self.window[self.FILE_PATH_INPUT_KEY].update(value="")
@@ -278,7 +293,7 @@ class CwGenUI:
             by passing its generated UUID to cwgen. UI gets updated.
 
         Args:
-            values (dict): Dictionary containing GUI event values
+            values (dict): Dictionary containing GUI elements values
 
         Returns:
             None
@@ -288,7 +303,7 @@ class CwGenUI:
             table_data = self.window[self.FILES_DATA_TABLE_KEY].get()
             selected_dictionary_uuid = table_data[self.files_table_idx][0]
             if self.cw_gen.remove_dictionary(selected_dictionary_uuid):
-                self._update_ui(values)
+                self._update_ui_on_dictionary_set_change(values)
 
             # set table index to negative to properly handle dictionary remove button click
             self.files_table_idx = -1
@@ -296,19 +311,18 @@ class CwGenUI:
     def handle_words_length_sliders(self, event, values):
         """Handle words length sliders movement
             to not let their values become ridiculous.
-            It also updates words statistics table.
 
         Args:
             event (str): GUI event name
-            values (dict): Dictionary containing GUI event values
+            values (dict): Dictionary containing GUI elements values
 
         Returns:
             None
         """
 
         # get current positions
-        slider_min_val = values[self.LETTERS_MIN_KEY]
-        slider_max_val = values[self.LETTERS_MAX_KEY]
+        slider_min_val = int(values[self.LETTERS_MIN_KEY])
+        slider_max_val = int(values[self.LETTERS_MAX_KEY])
 
         # update them if needed
         if event == self.LETTERS_MIN_KEY:
@@ -322,15 +336,14 @@ class CwGenUI:
                 self.window[self.LETTERS_MIN_KEY].update(
                     value=slider_min_val)
 
-        # trigger words statistics calculation
-        self._update_words_stat(values, slider_min_val, slider_max_val)
+        return (slider_min_val, slider_max_val)
 
     def update_words_length_sliders_config(self, values, new_range):
         """Updates UI part related to words length sliders change their range
             assuring that sliders values gets updated when needed
 
         Args:
-            values (dict): Dictionary containing GUI event values
+            values (dict): Dictionary containing GUI elements values
             new_range (tuple): New value range
 
         Returns:
@@ -404,7 +417,12 @@ class CwGenUI:
 
         # handle words length change
         if (event == self.LETTERS_MIN_KEY) or (event == self.LETTERS_MAX_KEY):
-            self.handle_words_length_sliders(event, values)
+            words_min_length, words_max_length = self.handle_words_length_sliders(event, values)
+            self._update_ui_on_words_filtering_change(values, words_min_length, words_max_length)
+
+        # handle letters set and generator scheme change
+        if (event == self.COMBO_LETTERS_SET_KEY) or (event == self.COMBO_MATERIAL_GENERATION_KEY):
+            self._update_ui_on_words_filtering_change(values)
 
         return True
 
