@@ -188,6 +188,29 @@ class CwGenUI:
         # Configure and create the window
         self.window = sg.Window(self.WINDOW_DESCRIPTION, layout)
 
+    def _get_dictionary_key_by_value(self, dictionary, lookup_value):
+        '''Retrieves a key based on provided string value
+            keeping insertion result, meaning if dictionary
+            contain a number of keys with exact same value
+            first key (in insertion order) will be returned.
+
+        Args:
+            dictionary (dict): dictionary to search for a key
+            lookup_value (str): value for which key should be found
+
+        Returns:
+            result (str): key or None if lookup_value not found
+        '''
+
+        result = None
+
+        for key, value in dictionary.items():
+            if value == lookup_value:
+                result = key
+                break
+
+        return result
+
     def _update_ui_on_dictionary_set_change(self, values):
         """Updates relevant UI elements according to change
             in dictionary set.
@@ -225,7 +248,8 @@ class CwGenUI:
             values=table_data)
         words_min_length, words_max_length = self.update_words_length_sliders_config(
             values, (sliders_range))
-        self._update_ui_on_words_filtering_change(values, words_min_length, words_max_length)
+        self._update_ui_on_words_filtering_change(
+            values, words_min_length, words_max_length)
 
     def _update_ui_on_words_filtering_change(self, values, min_length=None, max_length=None):
         '''Updates words stat with filtered result
@@ -248,7 +272,8 @@ class CwGenUI:
         words_min_length = int(values[self.LETTERS_MIN_KEY])
         words_max_length = int(values[self.LETTERS_MAX_KEY])
         letters_set = self.window[self.COMBO_LETTERS_SET_KEY].get()
-        generator_scheme = self.window[self.COMBO_MATERIAL_GENERATION_KEY].get()
+        generator_scheme = self.window[self.COMBO_MATERIAL_GENERATION_KEY].get(
+        )
 
         if min_length is not None:
             words_min_length = min_length
@@ -257,7 +282,9 @@ class CwGenUI:
 
         # get filtered words stat
         words_stat = self.cw_gen.get_words_stat_filtered(
-            words_min_length, words_max_length, letters_set, generator_scheme)
+            words_min_length, words_max_length,
+            self._get_dictionary_key_by_value(self.letters_sets, letters_set),
+            self._get_dictionary_key_by_value(self.training_generator_schemes, generator_scheme))
 
         # assemble words stat table (sorted by word length)
         stat = []
@@ -417,8 +444,10 @@ class CwGenUI:
 
         # handle words length change
         if (event == self.LETTERS_MIN_KEY) or (event == self.LETTERS_MAX_KEY):
-            words_min_length, words_max_length = self.handle_words_length_sliders(event, values)
-            self._update_ui_on_words_filtering_change(values, words_min_length, words_max_length)
+            words_min_length, words_max_length = self.handle_words_length_sliders(
+                event, values)
+            self._update_ui_on_words_filtering_change(
+                values, words_min_length, words_max_length)
 
         # handle letters set and generator scheme change
         if (event == self.COMBO_LETTERS_SET_KEY) or (event == self.COMBO_MATERIAL_GENERATION_KEY):
