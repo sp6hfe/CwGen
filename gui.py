@@ -6,6 +6,8 @@ import PySimpleGUI as sg
 
 
 class CwGenUI:
+    # General
+
     # GUI - window config
     WINDOW_DESCRIPTION = 'CW training material generator by SP6HFE'
 
@@ -120,11 +122,11 @@ class CwGenUI:
                        sg.Text("0", size=(2, 1), key=self.LETTERS_MAX_RANGE_STOP_KEY)]
 
         letters_set = [sg.Text('From set:'),
-                       sg.Combo(values=([name for _id, name in self.letters_sets.items()]),
+                       sg.Combo(values=([data['description'] for _id, data in self.letters_sets.items()]),
                                 default_value=list(
-                                    self.letters_sets.items())[0][1],
-                                size=(max(len(name)
-                                          for _id, name in self.letters_sets.items()), 1),
+                                    self.letters_sets.items())[0][1]['description'],
+                                size=(max(len(data['description'])
+                                          for _id, data in self.letters_sets.items()), 1),
                                 readonly=True,
                                 enable_events=True,
                                 key=self.COMBO_LETTERS_SET_KEY)]
@@ -188,7 +190,7 @@ class CwGenUI:
         # Configure and create the window
         self.window = sg.Window(self.WINDOW_DESCRIPTION, layout)
 
-    def _get_dictionary_key_by_value(self, dictionary, lookup_value):
+    def _get_dictionary_key_by_value(self, dictionary, lookup_value, nested_key=None):
         '''Retrieves a key based on provided string value
             keeping insertion result, meaning if dictionary
             contain a number of keys with exact same value
@@ -197,6 +199,7 @@ class CwGenUI:
         Args:
             dictionary (dict): dictionary to search for a key
             lookup_value (str): value for which key should be found
+            nested_key (str): key in nested dictionary where lookup_value is
 
         Returns:
             result (str): key or None if lookup_value not found
@@ -205,7 +208,12 @@ class CwGenUI:
         result = None
 
         for key, value in dictionary.items():
-            if value == lookup_value:
+            if nested_key is not None:
+                data = value[nested_key]
+            else:
+                data = value
+
+            if data == lookup_value:
                 result = key
                 break
 
@@ -283,7 +291,8 @@ class CwGenUI:
         # get filtered words stat
         words_stat = self.cw_gen.get_words_stat_filtered(
             words_min_length, words_max_length,
-            self._get_dictionary_key_by_value(self.letters_sets, letters_set),
+            self._get_dictionary_key_by_value(
+                self.letters_sets, letters_set, 'description'),
             self._get_dictionary_key_by_value(self.training_generator_schemes, generator_scheme))
 
         # assemble words stat table (sorted by word length)

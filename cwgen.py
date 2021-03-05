@@ -13,7 +13,17 @@ class CwGen:
         E2CW_SUBFOLDER = 'ebook2cw'
 
         self.letters_sets = {
-            'all': 'All letters and numbers'
+            'all':   {'description': 'All letters and numbers', 'letters': '*'},
+            'cwo1':  {'description': 'CWOPS session 1',         'letters': 'tean'},
+            'cwo2':  {'description': 'CWOPS session 2',         'letters': 'teanois14'},
+            'cwo3':  {'description': 'CWOPS session 3',         'letters': 'teanoisrhdl1425'},
+            'cwo4':  {'description': 'CWOPS session 4',         'letters': 'teanoisrhdluc1425'},
+            'cwo5':  {'description': 'CWOPS session 5',         'letters': 'teanoisrhdlucmw142536?'},
+            'cwo6':  {'description': 'CWOPS session 6',         'letters': 'teanoisrhdlucmwfy142536?'},
+            'cwo7':  {'description': 'CWOPS session 7',         'letters': 'teanoisrhdlucmwfypg14253679?/'},
+            'cwo8':  {'description': 'CWOPS session 8',         'letters': 'teanoisrhdlucmwfypgbv14253679?/'},
+            'cwo9':  {'description': 'CWOPS session 9',         'letters': 'teanoisrhdlucmwfypgbvkj1425367980?/'},
+            'cwo10': {'description': 'CWOPS session 10',        'letters': 'teanoisrhdlucmwfypgbvkjxqz1425367980?/'},
         }
 
         self.training_generator_schemes = {
@@ -264,7 +274,7 @@ class CwGen:
             to visualize words set that can be used for training material generation.
 
         Args:
-            min_length (int): Minimal words length
+            min_length (int): Minimal words length  
             max_length (int): Maximal words length
             letters_set (str): Id of the letters set out of which words could be made up
                 (check self.letters_sets)
@@ -340,12 +350,6 @@ class CwGen:
 
 def main():
     print("To be implemented...")
-
-    cwgen = CwGen()
-    local_ver = cwgen.get_ebook2cw_version_local()
-    online_ver = cwgen.get_ebook2cw_version_online()
-
-    print("local: " + local_ver + ", online: " + online_ver)
 
 
 if __name__ == '__main__':
