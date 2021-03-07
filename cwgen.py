@@ -90,10 +90,7 @@ class CwGen:
                 'path': dictionary path
                 'data': Dictionary {key, value}
                     key: word length
-                    value (list): [word, meta_data, occurence]
-                        word (str): a word
-                        meta_data (str): additional information (ispell dictionaries)
-                        occurence (int): number of occurences in a probe (the higher the more frequently used)
+                    value (list): words list of the same length
         """
 
         result = {}
@@ -103,28 +100,18 @@ class CwGen:
             for line in dictionary:
                 # populate dictionary (key: word letters count, value: list of words with same length)
                 split_data = line.strip().split(None, 1)
-
-                data_count = len(split_data)
-
-                # handle simple dictionary with words only
-                if data_count == 1:
-                    words_dictionary.setdefault(len(split_data[0]), []).append([
-                        split_data[0], 'None', 'None'])
-                # handle more complex dictionary having additional data like ispell [word/metadata occurence]
-                elif data_count == 2:
-                    # split word metadata - if attached
-                    wm_list = split_data[0].split("/", 1)
-                    wm_list_len = len(wm_list)
-                    if wm_list_len == 1:
-                        words_dictionary.setdefault(len(wm_list[0]), []).append(
-                            [wm_list[0], 'None', split_data[1]])
-                    elif wm_list_len >= 2:
-                        words_dictionary.setdefault(len(wm_list[0]), []).append(
-                            [wm_list[0], wm_list[1], split_data[1]])
-                # no other type is supported for now
-                else:
-                    words_dictionary.clear()
-                    break
+                # ignore empty lines and comments
+                if len(split_data) > 0 and split_data[0][0] != '#':
+                    # handle multi word row (starting with %)
+                    if split_data[0][0] == '%':
+                        print('Multi word line: ', end='[')
+                        print(*split_data[1:], end='] ')
+                        print('not supported yet.')
+                    else:
+                        # handle simple or more complex dictionary having additional data separated with '/' (like ispell -> [word/metadata occurence])
+                        word_meta_list = split_data[0].split("/", 1)
+                        words_dictionary.setdefault(
+                            len(word_meta_list[0]), []).append([word_meta_list[0]])
 
         # assemble result
         if len(words_dictionary) > 0:
