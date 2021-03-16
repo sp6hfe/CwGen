@@ -1,7 +1,6 @@
 import cwgen
 import os
 import sys
-
 import PySimpleGUI as sg
 
 
@@ -192,7 +191,7 @@ class CwGenUI:
 
     def _get_dictionary_key_by_value(self, dictionary, lookup_value, nested_key=None):
         '''Retrieves a key based on provided string value
-            keeping insertion result, meaning if dictionary
+            keeping insertion order, meaning if dictionary
             contain a number of keys with exact same value
             first key (in insertion order) will be returned.
 

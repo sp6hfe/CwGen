@@ -1,4 +1,5 @@
 import ebook2cw as e2cw
+import collections
 import os
 import sys
 import uuid
@@ -111,7 +112,7 @@ class CwGen:
                         # handle simple or more complex dictionary having additional data separated with '/' (like ispell -> [word/metadata occurence])
                         word_meta_list = split_data[0].split("/", 1)
                         words_dictionary.setdefault(
-                            len(word_meta_list[0]), []).append([word_meta_list[0]])
+                            len(word_meta_list[0]), []).append(word_meta_list[0])
 
         # assemble result
         if len(words_dictionary) > 0:
@@ -261,7 +262,7 @@ class CwGen:
             to visualize words set that can be used for training material generation.
 
         Args:
-            min_length (int): Minimal words length  
+            min_length (int): Minimal words length
             max_length (int): Maximal words length
             letters_set (str): Id of the letters set out of which words could be made up
                 (check self.letters_sets)
@@ -284,17 +285,48 @@ class CwGen:
         if generator_scheme not in self.training_generator_schemes.keys():
             return words_stat
 
+        # verify if letters wildcard is available
+        all_characters_mode = True if self.letters_sets[letters_set]['letters'][0] == '*' else False
+
+        # letters set counter is assumed to have all values of 1 (no letter repeats)
+        letters_set_counter = collections.Counter(
+            self.letters_sets[letters_set]['letters'].upper())
+
         # aggregate and filter words statistics
         for dictionary in self.dictionary_list:
-            stat = self._get_words_stat(dictionary['data'])['words_stat']
-            for word_len in stat.keys():
-                # filter words length
-                if word_len >= min_length and word_len <= max_length:
-                    # update result
-                    if word_len not in words_stat.keys():
-                        words_stat[word_len] = stat[word_len]
-                    else:
-                        words_stat[word_len] += stat[word_len]
+            if all_characters_mode:
+                # filtering based on pre-calculated statistics
+                stat = self._get_words_stat(dictionary['data'])['words_stat']
+                for word_len in stat.keys():
+                    # filter words length
+                    if word_len >= min_length and word_len <= max_length:
+                        # update result
+                        if word_len not in words_stat.keys():
+                            words_stat[word_len] = stat[word_len]
+                        else:
+                            words_stat[word_len] += stat[word_len]
+            else:
+                # filtering based on word by word analysis
+                for word_len in dictionary['data'].keys():
+                    # filter words length
+                    if word_len >= min_length and word_len <= max_length:
+                        # analyze word by word
+                        for word in dictionary['data'][word_len]:
+                            word_counter = collections.Counter(word.upper())
+                            # we expect result as word character count reduction by number
+                            # of all distinct characters that should be present in letters set
+                            expected_result = word_len - \
+                                len(word_counter.keys())
+                            distinct_letters_subtracted = word_counter - letters_set_counter
+                            result = 0 if not distinct_letters_subtracted.values() else sum(
+                                distinct_letters_subtracted.values())
+
+                            if result == expected_result:
+                                # update result
+                                if word_len not in words_stat.keys():
+                                    words_stat[word_len] = 1
+                                else:
+                                    words_stat[word_len] += 1
 
         return words_stat
 
