@@ -28,6 +28,7 @@ class CwGen:
         }
 
         self.training_generator_schemes = {
+            'all':   'All words available',
             'rand':  'Random words',
             'equal': 'Equalize number of all lengths',
             'short': 'Prioritize shorter words',
