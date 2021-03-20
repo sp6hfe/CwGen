@@ -25,6 +25,7 @@ class CwGenUI:
     # GUI - table config
     FILES_DATA_TABLE_KEY = '-FILES DATA-'
     WORDS_FILTERED_TABLE_KEY = '-WORDS FILTERED-'
+    WORDS_TO_GEN_TABLE_KEY = '-WORDS TO GEN-'
 
     # GUI - sliders config
     H_SLIDER_WIDTH = 21
@@ -35,6 +36,9 @@ class CwGenUI:
     LETTERS_MIN_RANGE_STOP_KEY = '-LETTERS MIN RANGE STOP-'
     LETTERS_MAX_RANGE_START_KEY = '-LETTERS MAX RANGE START-'
     LETTERS_MAX_RANGE_STOP_KEY = '-LETTERS MAX RANGE STOP-'
+    WORDS_TO_TRAIN_KEY = '-WORDS TO TRAIN-'
+    WORDS_TO_TRAIN_RANGE_START_KEY = 'WORDS TO TRAIN RANGE START-'
+    WORDS_TO_TRAIN_RANGE_STOP_KEY = 'WORDS TO TRAIN RANGE STOP-'
     E2CW_WPM_KEY = '-E2CW WPM-'
     E2CW_WPM_RANGE_START_KEY = '-E2CW WPM RANGE START-'
     E2CW_WPM_RANGE_STOP_KEY = '-E2CW WPM RANGE STOP-'
@@ -64,13 +68,18 @@ class CwGenUI:
         # GUI - header columns -> name, column size, visible?
         files_data_header = [
             ("UUID",       0, False),
-            ("File name", 20, True),
+            ("File name", 14, True),
             ("Words",      6, True),
             ("Min len",    7, True),
             ("Max len",    7, True)
         ]
 
         words_filtered_header = [
+            ("Word length", 15, True),
+            ("Count",       15, True)
+        ]
+
+        words_to_gen_header = [
             ("Word length", 15, True),
             ("Count",       15, True)
         ]
@@ -99,6 +108,16 @@ class CwGenUI:
                                          justification='left',
                                          auto_size_columns=False,
                                          key=self.WORDS_FILTERED_TABLE_KEY)]
+
+        words_to_gen_table = [sg.Table(values=[],
+                                       headings=[
+            name for name, _size, _visible in words_to_gen_header],
+            col_widths=[
+            size for _name, size, _visible in words_to_gen_header],
+            num_rows=5,
+            justification='left',
+            auto_size_columns=False,
+            key=self.WORDS_TO_GEN_TABLE_KEY)]
 
         # GUI - rows
         files_operation = [sg.Input(enable_events=True, visible=False, key=self.FILE_PATH_INPUT_KEY),
@@ -140,6 +159,13 @@ class CwGenUI:
                                      enable_events=True,
                                      key=self.COMBO_MATERIAL_GENERATION_KEY)]
 
+        words_to_train = [sg.Text("SIZE:", size=(6, 1)),
+                          sg.Text("0", size=(2, 1),
+                                  key=self.WORDS_TO_TRAIN_KEY),
+                          sg.Slider(range=(0, 0), size=(self.H_SLIDER_WIDTH, self.H_SLIDER_HEIGHT),
+                                    orientation='h', enable_events=True, key=self.WORDS_TO_TRAIN_RANGE_START_KEY),
+                          sg.Text("0", size=(2, 1), key=self.WORDS_TO_TRAIN_RANGE_STOP_KEY)]
+
         e2cw_ver_local = [sg.Text('Local:', size=(7, 1)),
                           sg.Text(ebook2cw_version_local, key=self.E2CW_VER_LOCAL_KEY)]
 
@@ -175,10 +201,12 @@ class CwGenUI:
             [sg.Frame('Dictionaries', [files_operation, files_data_table])],
             [sg.Frame('Letters selection', [letters_set])],
             [sg.Frame('Words length', [letters_min, letters_max])],
-            [sg.Frame('Training material', [words_filtered_table])]]
+            [sg.Frame('Training input', [words_filtered_table])]]
 
         right_col = [
-            [sg.Frame('Material generation', [generator_scheme])],
+            [sg.Frame('Training generator', [generator_scheme])],
+            [sg.Frame('Training set size', [words_to_train])],
+            [sg.Frame('Training output', [words_to_gen_table])],
             [sg.Frame('Ebook2CW version', [e2cw_ver_local,
                                            e2cw_ver_online, e2cw_download_button])],
             [sg.Frame('Audible parameters', [e2cw_wpm, e2cw_farns, e2cw_pitch])]]
