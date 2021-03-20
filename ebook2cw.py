@@ -115,16 +115,14 @@ class Ebook2Cw:
         version = '0'
 
         if self.is_os_supported:
-            helpers.get_file_from_web(
-                self.changelog_file_url, self.changelog_file_local_path)
-
-            if os.path.exists(self.changelog_file_local_path):
-                with open(self.changelog_file_local_path, 'r') as changelog:
-                    data = changelog.readline()
-                extracted_version = data.split()[0]
-                # basic check for version length which is at least X.Y.Z
-                if len(extracted_version) >= 5:
-                    version = extracted_version
+            if helpers.get_file_from_web(self.changelog_file_url, self.changelog_file_local_path):
+                if os.path.exists(self.changelog_file_local_path):
+                    with open(self.changelog_file_local_path, 'r') as changelog:
+                        data = changelog.readline()
+                    extracted_version = data.split()[0]
+                    # basic check for version length which is at least X.Y.Z
+                    if len(extracted_version) >= 5:
+                        version = extracted_version
 
         return version
 
@@ -164,18 +162,18 @@ class Ebook2Cw:
                 if_got_executable = True
             else:
                 # download files (executable + md5)
-                helpers.get_file_from_web(
-                    self.executable_url, self.executable_local_path)
-                helpers.get_file_from_web(
-                    self.hash_file_url, self.hash_file_local_path)
+                if helpers.get_file_from_web(
+                        self.executable_url, self.executable_local_path):
+                    if helpers.get_file_from_web(
+                            self.hash_file_url, self.hash_file_local_path):
 
-                if os.path.exists(self.executable_local_path) and os.path.exists(self.hash_file_local_path):
-                    # verify executable's integrity
-                    if self._verify_executable_against_md5_file():
-                        if_got_executable = True
-                    else:
-                        # md5 mismatch - remove files
-                        os.remove(self.executable_local_path)
-                        os.remove(self.hash_file_local_path)
+                        if os.path.exists(self.executable_local_path) and os.path.exists(self.hash_file_local_path):
+                            # verify executable's integrity
+                            if self._verify_executable_against_md5_file():
+                                if_got_executable = True
+                            else:
+                                # md5 mismatch - remove files
+                                os.remove(self.executable_local_path)
+                                os.remove(self.hash_file_local_path)
 
         return if_got_executable

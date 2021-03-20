@@ -14,10 +14,11 @@ def get_file_from_web(file_url, file_path):
         file_path (str): Path to the resulting file (incl. file name)
 
     Returns:
-        None
+        bool: True when file was downloaeded, False on error
     """
 
     TEMP_FILE_SUFFIX = '_tmp'
+    is_file_downloaded = True
 
     # make sure directories are there
     file_directory = os.path.dirname(file_path)
@@ -26,14 +27,20 @@ def get_file_from_web(file_url, file_path):
 
     # download the file with temporary suffix
     temp_file_path = file_path + TEMP_FILE_SUFFIX
-    urllib.request.urlretrieve(file_url, temp_file_path)
+    try:
+        urllib.request.urlretrieve(file_url, temp_file_path)
+    except urllib.error.URLError:
+        is_file_downloaded = False
 
-    # verify if another copy already exist
-    if os.path.exists(file_path):
-        os.remove(file_path)
+    if is_file_downloaded:
+        # verify if another copy already exist
+        if os.path.exists(file_path):
+            os.remove(file_path)
 
-    # rename downloaded file
-    os.rename(temp_file_path, file_path)
+        # rename downloaded file
+        os.rename(temp_file_path, file_path)
+
+    return is_file_downloaded
 
 
 def md5(file_path):

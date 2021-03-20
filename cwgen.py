@@ -224,7 +224,8 @@ class CwGen:
                     max_length = single_stat['max_length']
 
                 for word_length, words_count in single_stat['words_stat'].items():
-                    aggregated_words_stat[word_length] = aggregated_words_stat.setdefault(word_length, 0) + words_count
+                    aggregated_words_stat[word_length] = aggregated_words_stat.setdefault(
+                        word_length, 0) + words_count
 
         # assemble information - if any
         if words_count > 0:
@@ -301,7 +302,8 @@ class CwGen:
                     # filter by character set
                     if all_characters_mode:
                         # for wildcard get eveything
-                        words_filtered_dict.setdefault(word_len, []).extend(dictionary['data'][word_len])
+                        words_filtered_dict.setdefault(word_len, []).extend(
+                            dictionary['data'][word_len])
                     else:
                         # analyze word by word
                         for word in dictionary['data'][word_len]:
@@ -316,7 +318,8 @@ class CwGen:
 
                             if result == expected_result:
                                 # update result with filtered word
-                                words_filtered_dict.setdefault(word_len, []).append(word)
+                                words_filtered_dict.setdefault(
+                                    word_len, []).append(word)
 
         return words_filtered_dict
 
@@ -346,7 +349,8 @@ class CwGen:
         if generator_scheme not in self.training_generator_schemes.keys():
             return words_stat
 
-        words_filtered = self.get_words_filtered(min_length, max_length, letters_set)
+        words_filtered = self.get_words_filtered(
+            min_length, max_length, letters_set)
         if not words_filtered:
             return words_stat
 

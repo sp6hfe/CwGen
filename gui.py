@@ -298,7 +298,8 @@ class CwGenUI:
         stat = []
         if words_stat_filtered:
             for word_length in sorted(words_stat_filtered['words_stat'].keys()):
-                stat.append([word_length, words_stat_filtered['words_stat'][word_length]])
+                stat.append(
+                    [word_length, words_stat_filtered['words_stat'][word_length]])
 
         # update UI
         self.window[self.WORDS_FILTERED_TABLE_KEY].update(values=stat)
