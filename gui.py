@@ -175,10 +175,10 @@ class CwGenUI:
             [sg.Frame('Dictionaries', [files_operation, files_data_table])],
             [sg.Frame('Letters selection', [letters_set])],
             [sg.Frame('Words length', [letters_min, letters_max])],
-            [sg.Frame('Material generation', [generator_scheme])],
             [sg.Frame('Training material', [words_filtered_table])]]
 
         right_col = [
+            [sg.Frame('Material generation', [generator_scheme])],
             [sg.Frame('Ebook2CW version', [e2cw_ver_local,
                                            e2cw_ver_online, e2cw_download_button])],
             [sg.Frame('Audible parameters', [e2cw_wpm, e2cw_farns, e2cw_pitch])]]
@@ -234,7 +234,7 @@ class CwGenUI:
 
         # get information related to already loaded data
         dictionaries_info = self.cw_gen.get_dictionaries_info()
-        words_info = self.cw_gen.get_words_info()
+        words_info = self.cw_gen.get_words_stat()
 
         # generate updated data for UI elements
         if len(dictionaries_info) > 0:
@@ -288,7 +288,7 @@ class CwGenUI:
             words_max_length = max_length
 
         # get filtered words stat
-        words_stat = self.cw_gen.get_words_stat_filtered(
+        words_stat_filtered = self.cw_gen.get_words_stat_filtered(
             words_min_length, words_max_length,
             self._get_dictionary_key_by_value(
                 self.letters_sets, letters_set, 'description'),
@@ -296,8 +296,9 @@ class CwGenUI:
 
         # assemble words stat table (sorted by word length)
         stat = []
-        for key in sorted(words_stat.keys()):
-            stat.append([key, words_stat[key]])
+        if words_stat_filtered:
+            for word_length in sorted(words_stat_filtered['words_stat'].keys()):
+                stat.append([word_length, words_stat_filtered['words_stat'][word_length]])
 
         # update UI
         self.window[self.WORDS_FILTERED_TABLE_KEY].update(values=stat)
