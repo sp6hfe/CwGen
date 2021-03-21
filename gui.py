@@ -18,6 +18,7 @@ class CwGenUI:
     FILE_BROWSE_KEY = '-ADD FILE-'
     FILE_REMOVE_KEY = '-REMOVE FILE-'
     E2CW_DOWNLOAD_KEY = '-E2CW DOWNLOAD-'
+    E2CW_GENERATE_KEY = '-E2CW GENERATE-'
 
     # GUI - input config
     FILE_PATH_INPUT_KEY = '-FILE PATH-'
@@ -166,14 +167,11 @@ class CwGenUI:
                                     orientation='h', enable_events=True, key=self.WORDS_TO_TRAIN_RANGE_START_KEY),
                           sg.Text("0", size=(2, 1), key=self.WORDS_TO_TRAIN_RANGE_STOP_KEY)]
 
-        e2cw_ver_local = [sg.Text('Local:', size=(7, 1)),
-                          sg.Text(ebook2cw_version_local, key=self.E2CW_VER_LOCAL_KEY)]
+        e2cw_version = [sg.Text('Local version:', size=(15, 1)), sg.Text(ebook2cw_version_local, key=self.E2CW_VER_LOCAL_KEY),
+                        sg.Text('Online version:', size=(15, 1)), sg.Text(ebook2cw_version_online, key=self.E2CW_VER_ONLINE_KEY)]
 
-        e2cw_ver_online = [sg.Text('Online:', size=(7, 1)),
-                           sg.Text(ebook2cw_version_online, key=self.E2CW_VER_ONLINE_KEY)]
-
-        e2cw_download_button = [
-            sg.Button('Download / Update', key=self.E2CW_DOWNLOAD_KEY)]
+        e2cw_buttons = [sg.Button('Download / Update Ebook2CW', key=self.E2CW_DOWNLOAD_KEY),
+                        sg.Button('Generate training files', key=self.E2CW_GENERATE_KEY)]
 
         e2cw_wpm = [sg.Text("WPM:", size=(6, 1)),
                     sg.Text("0", size=(2, 1),
@@ -207,9 +205,8 @@ class CwGenUI:
             [sg.Frame('Training generator', [generator_scheme])],
             [sg.Frame('Training set size', [words_to_train])],
             [sg.Frame('Training output', [words_to_gen_table])],
-            [sg.Frame('Ebook2CW version', [e2cw_ver_local,
-                                           e2cw_ver_online, e2cw_download_button])],
-            [sg.Frame('Audible parameters', [e2cw_wpm, e2cw_farns, e2cw_pitch])]]
+            [sg.Frame('Audible parameters', [e2cw_wpm, e2cw_farns, e2cw_pitch])],
+            [sg.Frame('Ebook2CW', [e2cw_version, e2cw_buttons])]]
 
         # App layout
         layout = [[sg.Column(left_col), sg.VSeparator(), sg.Column(right_col)]]
