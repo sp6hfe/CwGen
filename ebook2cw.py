@@ -145,10 +145,11 @@ class Ebook2Cw:
         """Downloads latest version of the ebook2cw (OS speciffic)
             performing download integrity check by MD5 verification.
             When not forced it checks if executable exist locally.
-            In case of not supported OS none of above is not performed.
+            In case of not supported OS none of above is performed.
 
         Args:
             force_latest (bool): Forces to download latest version
+                regardless if local copy exist or not
 
         Returns:
             bool: True when executable is available, False otherwise
@@ -166,14 +167,12 @@ class Ebook2Cw:
                         self.executable_url, self.executable_local_path):
                     if helpers.get_file_from_web(
                             self.hash_file_url, self.hash_file_local_path):
-
-                        if os.path.exists(self.executable_local_path) and os.path.exists(self.hash_file_local_path):
-                            # verify executable's integrity
-                            if self._verify_executable_against_md5_file():
-                                if_got_executable = True
-                            else:
-                                # md5 mismatch - remove files
-                                os.remove(self.executable_local_path)
-                                os.remove(self.hash_file_local_path)
+                        # verify executable's integrity
+                        if self._verify_executable_against_md5_file():
+                            if_got_executable = True
+                        else:
+                            # md5 mismatch - remove files
+                            os.remove(self.executable_local_path)
+                            os.remove(self.hash_file_local_path)
 
         return if_got_executable
